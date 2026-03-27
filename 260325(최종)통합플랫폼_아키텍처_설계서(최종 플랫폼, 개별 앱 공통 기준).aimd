@@ -1,0 +1,1868 @@
+---
+aimd: "1.2"
+primer: ":::ai=AI지시(따를것) :::human=무시 :::rules=준수 CRITICAL=필수 FREEZE=수정금지"
+project: ai-works-platform
+version: 2026-03-27
+---
+
+:::abbr
+SSO  = Single Sign On
+ORM  = Object Relational Mapping
+MCP  = Model Context Protocol
+RAG  = Retrieval Augmented Generation
+RLS  = Row Level Security
+DI   = Dependency Injection
+E2E  = End to End
+SoT  = Source of Truth
+EAV  = Entity Attribute Value
+FTS  = Full Text Search
+TAM  = Total Addressable Market
+UGC  = User Generated Content
+SSE  = Server Sent Events
+pgmq = PostgreSQL Message Queue
+:::
+
+# AI-Works 통합 플랫폼 아키텍처 설계서
+
+:::ai
+CTX: 작성일 2026-03-22. 최종수정 2026-03-27.
+     PDF Editor Pro(/apps/pdf) 별도앱 공식분리로 앱수 21→22개.
+     Billing 완성(토스페이먼츠 빌링키). 플랜 SoT = subscriptions.plan 단독.
+     DB: stripe_* → toss_* rename 완료. AI-Word·AI-Sheet DB저장 완성.
+     AI-Mailer 완성(Resend). UsageMeter 실데이터. profiles.role + /admin.
+     AI-Mdvault 검색·채팅 컨텍스트 강화.
+
+목적: AI-Works 전 앱을 단일 서비스 도메인 아래 통합 시
+     공통 개발 vs 앱별 개발 명확히 구분.
+:::
+
+---
+
+## 1. 아키텍처 결론
+
+:::ai
+CRITICAL: 단일 Next.js 앱 구조. Turborepo는 앱 30개↑ 또는 팀 3명↑ 독립배포 시점에 검토.
+:::
+
+**분산 vs 통합 비교:**
+```
+항목               분산(현재)          통합(목표)
+────────────────────────────────────────────────
+회원가입 구현       앱마다(최대20회)    1회
+결제 연동           앱마다             1회
+DB 관리             앱마다 별도        Neon PostgreSQL 1개
+로그인 상태         앱 전환 시 재로그인  SSO — 한번 로그인
+운영 비용           앱수 × 인프라비용   단일 인프라(Cloudflare)
+개발 속도           앱마다 처음부터     새 앱 = 비즈니스 로직만
+```
+
+**URL 구조:**
+```
+https://aiworks.kr/
+├── /                      ← 통합 홈(앱 그리드)
+├── /login, /register      ← 공통 인증
+├── /dashboard             ← 사용자 대시보드
+├── /apps/[app-slug]/      ← 모든 앱
+└── /settings, /billing    ← 공통 설정·결제
+```
+
+---
+
+## 2. 앱 목록 (총 22개)
+
+:::ai
+CTX: 플랫폼 계층구조 = AI-Claworks(에이전트) → AI-Console(데이터허브·MCP) → 20개 앱(스킬)
+:::
+
+:::deps
+AI-Claworks (agent, sortOrder:-1)
+  → AI-Console MCP
+    → 18개 앱 스킬
+      → AI Gateway (Gemini/Upstage/Claude/OpenAI)
+:::
+
+**앱 레지스트리:**
+```
+#  앱이름                  카테고리      상태
+─────────────────────────────────────────────────────────────────
+-1 AI-Claworks             agent        기획확정(개발예정)
+00 AI-Console              workspace    기획확정(개발예정)
+01 AI 업무진단기            business     HTML프로토타입
+02 AI 제안서 빌더           document     플랫폼편입완료
+03 AI 콘텐츠 팩토리         document     플랫폼편입완료
+04 업무 자동화 설계기        automation   HTML프로토타입
+05 AI 데이터 분석기          document     플랫폼편입완료
+06 AI 프롬프트 스토어        marketplace  플랫폼편입완료 (/apps/prompt-store)
+07 AI 사업계획서 작성기      business     HTML프로토타입
+08 AI 카피라이터             document     편입완료(창업도움83점)
+09 AI 계약서 검토기          business     편입완료(UI완성·mock결과)
+10 AI 고객응대 생성기        business     편입완료(창업도움87점)
+11 AI 비용절감 ROI 계산기    business     편입완료(계산전용)
+12 AI-Word                 document     편입완료(DB저장·버전이력)
+13 AI-Sheet (Airtable대체) document     편입완료(DB저장·버전이력)
+14 AI-Slides               document     개발중
+15 AI-Teambot              business     독립완성95%(이식대상)
+16 AI-Tax                  automation   편입진행중(DB완성·Client미구현)
+17 AI-Recoder              utility      독립완성69%(이식대상)
+18 AI-Webdesign            utility      진행중
+19 PDF Editor Pro          utility      manifest등록(/apps/pdf)
+20 AI-MDConverter          utility      편입완료
+21 AI-Mdvault              document     편입진행중
+22 AI-Mailer               business     편입완료(/apps/mailer)
+23 AI-Pdf                  document     manifest등록(/apps/ai-pdf)
+```
+
+:::ai
+HIST: AI-Fax 제거(10인이하 타깃 무관). AI 채용·HR → AI-Console 서브기능 통합.
+      프롬프트스토어: AI-Mdvault 흡수결정 → 2026-03-25 번복 → 독립앱(/apps/prompt-store).
+目標: 100% 무인화, 100% AI화 — AI-Claworks가 창업자 대신 판단·실행.
+:::
+
+---
+
+## 3. 공통 레이어 (Shared Layer)
+
+### 3-1. 인증 (Auth) — 최우선
+
+:::ai
+CRITICAL: Better Auth 사용. Edge Runtime 호환 필수.
+DO: 세션은 JWT 기반, 앱 간 SSO 공유.
+:::
+
+```
+기능                    구현방법              비고
+────────────────────────────────────────────────────
+이메일·비밀번호          Better Auth           Edge Runtime 호환
+카카오 소셜              Better Auth OAuth2    B2C 핵심
+구글 소셜                Better Auth OAuth2    선택
+세션 유지(SSO)           Better Auth JWT       앱간 공유
+인증 미들웨어            Next.js middleware.ts 보호라우트 공통
+온보딩 플로우            Next.js 페이지        회원가입직후 프로필수집
+```
+
+**파일위치:**
+```
+src/app/(auth)/login·register·forgot-password·onboarding/page.tsx
+src/lib/auth/server.ts   ← Better Auth 서버설정
+src/lib/auth/client.ts   ← 클라이언트 컴포넌트용
+middleware.ts            ← 보호라우트 전역처리
+```
+
+---
+
+### 3-2. 구독·결제 (Billing) — 2순위
+
+:::ai
+CRITICAL: 플랜 SoT = subscriptions.plan 단독. profiles.plan 없음(DROP 완료).
+CRITICAL: 플랜조회는 반드시 getUserLimits(userId) / getActivePlan(userId) 사용.
+          위치: platform/src/lib/apps/plan.ts
+DO: 토스페이먼츠 빌링키 전사이클 구현.
+:::
+
+**플랜 설계:**
+```
+Free    : 앱당 월 100,000 토큰, 기본기능
+Starter : 월 1,000,000 토큰, 모든앱, 월 ₩9,900
+Pro     : 월 10,000,000 토큰, 우선처리, 월 ₩29,000
+Team    : 월 50,000,000 토큰, 팀원초대(5명), 월 ₩79,000
+```
+
+**환경변수:** `TOSS_SECRET_KEY`, `TOSS_CLIENT_KEY`, `TOSS_WEBHOOK_SECRET`
+
+**파일위치:**
+```
+src/app/(platform)/billing/page.tsx          ← 구독현황·결제UI
+src/app/api/billing/
+  checkout/route.ts  ← 빌링 인증준비
+  confirm/route.ts   ← 빌링키 발급 + 첫결제 승인
+  webhook/route.ts   ← 구독상태 동기화
+  portal/route.ts    ← 빌링키 해지
+```
+
+---
+
+### 3-3. 공통 DB (Neon PostgreSQL + Drizzle ORM)
+
+:::ai
+CRITICAL: 단일 Neon 프로젝트. 앱마다 DB 별도 금지.
+CRITICAL: 토스 Webhook 실패 시 plan stale 가능 → Sentry 에러기록 + 재처리큐 필수.
+DONT: profiles.plan 직접 조회/수정 금지. subscriptions.plan만 SoT.
+:::
+
+#### 공통 테이블
+
+:::schema profiles
+#id: TEXT PK → "user".id
+biz_name: TEXT?
+onboarding_completed: bool = false
+role: enum(user, admin) = user  @index
+created_at: datetime = now()
+updated_at: datetime @auto
+-- ⚠️ plan 컬럼 없음(DROP 완료) — subscriptions.plan이 SoT
+:::
+
+:::schema subscriptions
+#id: TEXT PK
+user_id: TEXT FK → "user"
+toss_customer_key: TEXT           ← 토스 customerKey
+toss_billing_key: TEXT @unique    ← 자동결제용 billingKey
+plan: enum(FREE, STARTER, PRO, TEAM)
+status: TEXT                      ← active|canceled|past_due|trialing
+period_end: datetime?
+created_at: datetime = now()
+updated_at: datetime @auto
+:::
+
+:::schema api_usage_logs
+#id: TEXT PK
+user_id: TEXT FK → "user"
+app_slug: TEXT
+model: TEXT
+input_tokens: int
+output_tokens: int
+cost_krw: decimal
+created_at: datetime = now()  @index(user_id, date_trunc('month', created_at))
+:::
+
+:::schema files
+#id: TEXT PK
+user_id: TEXT FK → "user"
+app_slug: TEXT
+r2_key: TEXT   ← {userId}/{appSlug}/{nanoid}.{ext}
+file_name: TEXT
+file_size: int
+mime_type: TEXT
+created_at: datetime = now()
+:::
+
+:::schema notifications
+#id: TEXT PK
+user_id: TEXT FK → "user"
+type: TEXT             ← vat_deadline|usage_limit 등
+title: TEXT
+body: TEXT
+is_read: bool = false
+created_at: datetime = now()
+:::
+
+:::schema app_registry
+#slug: TEXT PK
+name: TEXT!
+description: TEXT?
+icon: TEXT
+category: enum(business, document, automation, utility, workspace, agent)
+min_plan: enum(FREE, STARTER, PRO, TEAM) = FREE
+is_active: bool = true   ← false 시 미들웨어차단 + AppGrid미노출
+sort_order: int = 0
+route: TEXT
+created_at: datetime = now()
+:::
+
+:::schema user_app_pins
+user_id: TEXT FK → "user"
+app_slug: TEXT FK → app_registry
+pinned_at: datetime = now()
+-- PK(user_id, app_slug)
+:::
+
+#### 회사내부 RAG 테이블 (pgvector 필요)
+
+:::ai
+CTX: pgvector 확장 필요 — CREATE EXTENSION IF NOT EXISTS vector (마이그레이션 1회).
+CRITICAL: tenant 격리 = Drizzle 쿼리에 where(eq(tenantId, ?)) 항상 포함.
+          Supabase RLS 방식 아님.
+:::
+
+:::schema internal_documents
+#id: UUID PK = gen_random_uuid()
+tenant_id: UUID! FK → console_members
+title: TEXT!
+source_type: enum(mdvault, console_meeting, upload)
+source_id: UUID?       ← AI-Mdvault 문서ID (DeepLink용)
+file_type: enum(md, pdf, docx, xlsx)
+access_level: enum(all, team, manager_only) = team
+is_template: bool = false   ← true = {{변수}} 템플릿 → 인덱싱제외
+created_by: UUID?
+is_deleted: bool = false
+created_at: datetime = now()
+:::
+
+:::schema internal_chunks
+#id: UUID PK = gen_random_uuid()
+tenant_id: UUID!   @index   ← 격리기준 — 쿼리마다 필터필수
+doc_id: UUID FK → internal_documents  @index
+chunk_index: int!
+content: TEXT!
+embedding: vector(768)   ← Gemini embedding-001
+metadata: JSONB          ← sectionTitle, tags, sourceType 등
+created_at: datetime = now()
+-- INDEX: USING ivfflat (embedding vector_cosine_ops) WITH (lists=100)
+:::
+
+#### 두 RAG DB 구조
+
+```
+회사내부 RAG                        창업기업용 RAG (StartupMateAI)
+────────────────────────────        ────────────────────────────────
+Neon PostgreSQL (플랫폼공통DB)       Supabase (StartupMateAI 별도운영)
+DATABASE_URL (이미있음)              SUPABASE_DB_URL (환경변수추가)
+internal_chunks (tenant_id격리)     chunk_embeddings (공통지식, 격리없음)
+search_internal_kb MCP Tool         search_startup_kb MCP Tool
+  → 사규·계약·회의록·Mdvault 문서      → 법령·판례·표준계약서·지원사업 7,774청크
+단기: STARTUPMATE_API_URL HTTP호출    → law.go.kr 실시간법령조회 병행
+중기: @ai-works/rag-engine + SUPABASE_DB_URL 직접연결
+```
+
+**RAG 관련 환경변수:**
+```
+DATABASE_URL           Neon — 내부RAG포함 플랫폼전체  (이미있음)
+STARTUPMATE_API_URL    StartupMateAI Railway API       Phase4 추가
+SUPABASE_DB_URL        Supabase Direct 연결             Phase4+ 추가
+GEMINI_API_KEY         Gemini embedding-001             Phase4 추가
+```
+
+---
+
+### 3-4. AI API 게이트웨이
+
+:::ai
+CRITICAL: 앱코드는 callAI() / callAIText()만 호출. 개별 provider SDK 직접 import 금지.
+CRITICAL: Claude는 선택적 fallback provider. ANTHROPIC_API_KEY 없이도 Gemini/Upstage 경로 동작해야함.
+CRITICAL: api_usage_logs.model = 실제 응답에 사용된 최종 모델명 기록.
+DO: 모델선택 기준 = appSlug, intentHint, 프롬프트길이, contextLen.
+DO: 멀티모달(텍스트+base64이미지) = Gemini계열 우선, 비전미지원 fallback은 텍스트축약.
+:::
+
+**라우팅 정책 (2026-03-24):**
+```
+quick : Gemini 2.5 Flash Lite → GPT-4o-mini fallback
+deep  : Gemini 2.5 Flash → Upstage Solar Pro → Claude Sonnet → GPT-4o
+legal : Upstage Solar Pro → Gemini 2.5 Flash
+doc   : Gemini 2.5 Pro
+```
+
+**비동기 AI 작업 (pgmq):**
+
+:::flow ai-async-task
+1. Workers → pgmq enqueue
+2. 백그라운드 Worker → dequeue
+3. AI API 호출
+4. 실패 → 최대3회 재시도(지수백오프)
+5. 재시도초과 → dead_letter_queue + Sentry captureException()
+:::
+
+**파일위치:**
+```
+src/lib/ai/
+  gateway.ts         ← 공통 AI 호출 게이트웨이
+  usage-check.ts     ← 플랜별 사용량 체크
+  cost-calculator.ts ← 토큰 → 원단위(1USD=1,400KRW)
+  apps/{app}/        ← 앱별 AI 로직
+```
+
+---
+
+### 3-4-1. 글로벌 AI 채팅 어시스턴트
+
+:::ai
+CTX: 인프라 완료(배선완성). 각 앱 완성될수록 채팅 깊이 자동증가.
+CRITICAL: api/chat/route.ts는 export const runtime = "nodejs" 필수 (tool_use루프는 Edge불가).
+CRITICAL: 채팅API 인증세션 필수(401 반환).
+CRITICAL: tool_use 루프 최대5회 (무한루프방지).
+CRITICAL: ANTHROPIC_API_KEY 미설정 시 채팅 전체기능 불가 (게이트웨이 fallback과 독립).
+:::
+
+**아키텍처:**
+
+:::flow chat-request
+1. 사용자입력 → GlobalChatPanel (SSE 스트리밍수신)
+2. POST /api/chat
+3. Tool Use Loop (최대5회)
+   search_templates    ← AI-Mdvault 카탈로그검색
+   navigate_to_app     ← 앱경로 이동
+   list_vault_documents← 사용자문서 조회
+4. 최종텍스트 SSE 스트리밍
+:::
+
+**앱 context 주입 패턴:**
+```typescript
+// 각 앱 Client 컴포넌트 최상단
+usePlatformChat({
+  appSlug: "contract",
+  appName: "AI-Contract",
+  currentView: "분석 결과",
+  // 앱 완성 후 추가:
+  // currentDocument: contractData,
+})
+```
+
+**파일위치:**
+```
+src/components/global-chat/
+  GlobalChatProvider.tsx  ← Context: 상태·sendMessage·registerNavigate
+  GlobalChatPanel.tsx     ← UI: 플로팅버튼 + 사이드패널
+src/app/api/chat/route.ts ← SSE스트리밍 + Tool Use루프
+src/lib/chat/
+  tools.ts                ← PlatformTool 인터페이스 + 툴등록
+  types.ts                ← ToolCallRecord, AppContext, ClientAction
+```
+
+**채팅 전용 DB (3단계 — 앱 안정화 후):**
+
+:::schema chat_messages
+#id: TEXT PK
+user_id: TEXT FK → "user"
+session_id: TEXT
+role: enum(user, assistant)
+content: TEXT
+app_slug: TEXT
+tool_calls: JSONB   ← ToolCallRecord[] 직렬화
+created_at: datetime = now()
+:::
+
+---
+
+### 3-4-2. StartupMateAI RAG 통합 (창업기업용)
+
+:::ai
+CTX: C:\Users\yoo\Documents\dev_inbox\StartupMateAI 에 구축된 창업기업용 RAG.
+     AI 계약서 검토기가 1차 주요 소비앱. 이후 AI-Console에이전트·글로벌채팅으로 확장.
+CRITICAL: STARTUPMATE_API_URL 호출 타임아웃(5초) 및 fallback 필수.
+          RAG실패 시 → 내장지식으로 생성하되 "법조문 미인용" 표시.
+:::
+
+**StartupMateAI RAG 스택:**
+```
+벡터DB:     Supabase PostgreSQL + pgvector (chunk_embeddings 테이블)
+임베딩모델:  Gemini gemini-embedding-001 (768차원, L2정규화)
+청크수:     7,774개 (법령·판례·표준계약서·지원사업·업종별가이드)
+검색방식:   하이브리드: BM25 + Gemini의미검색 → RRF(k=60) 융합
+법령실시간:  law.go.kr aiSearch API (법제처공식) — 조문직접반환
+백엔드:     Express.js TypeScript, Railway 배포
+법령크롤러:  매주 일요일 02:00 KST, 245+ 법률주제 자동수집
+```
+
+**RAG 지식 카테고리:**
+```
+contract-agreement    한국 계약법 전반(민법·상법·하도급법)
+labor-employment      근로기준법·고용계약
+intellectual-property 저작권법·특허법·지재권귀속
+business-registration 상법 법인관련·투자계약기초
+corporate-governance  이사회·주주권·우선주
+compliance            공정거래법·약관규제법·불공정조항
+privacy-data          개인정보보호법·처리위탁
+e-commerce            전자상거래법·SaaS이용약관
+```
+
+**단기 HTTP API 프록시 (현재권장):**
+```typescript
+// src/lib/rag/startup-rag.ts
+// STARTUPMATE_API_URL 환경변수 필요
+
+export async function searchStartupKB(params: {
+  query: string;
+  category?: string;   // 'contract-agreement' | 'labor-employment' | ...
+  topK?: number;       // default 5
+}): Promise<RAGChunk[]> {
+  const res = await fetch(`${process.env.STARTUPMATE_API_URL}/api/chat/rag-stream`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: params.query,
+      category: params.category,
+      topK: params.topK ?? 5,
+      stream: false,
+    }),
+  });
+  const data = await res.json();
+  return data.chunks as RAGChunk[];
+}
+
+export async function searchLegalStatute(params: {
+  query: string;
+  lawType?: string;
+}): Promise<LegalArticle[]> {
+  const res = await fetch(`${process.env.STARTUPMATE_API_URL}/api/legal/search`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  return res.json();
+}
+```
+
+**중기: SUPABASE_DB_URL 직접연결 (성능최적화):**
+```typescript
+// 환경변수: SUPABASE_DB_URL, GEMINI_API_KEY
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+export async function semanticSearchLegal(query: string, category?: string) {
+  const embedding = await getGeminiEmbedding(query)  // 768-dim
+  const { data } = await supabase.rpc('match_chunks', {
+    query_embedding: embedding,
+    match_threshold: 0.7,
+    match_count: 10,
+    filter_category: category,
+  })
+  return data
+}
+```
+
+**계약서 검토기 특화 RAG 호출 패턴:**
+```typescript
+// src/app/api/apps/contract/analyze/route.ts
+async function buildContractRAGContext(input: ContractInput): Promise<string> {
+  const { contractType, concerns, contractText } = input;
+
+  // 1. 계약 유형별 표준 체크리스트 조회
+  const checklistChunks = await searchStartupKB({
+    query: `${contractType} 표준계약서 필수 조항 체크리스트`,
+    category: 'contract-agreement',
+    topK: 5,
+  });
+
+  // 2. 관련 법조문 실시간 조회 (law.go.kr)
+  const legalArticles = await searchLegalStatute({
+    query: `${contractType} 관련 법률 조문 민법 상법`,
+  });
+
+  // 3. 불공정 조항 판단 기준
+  const unfairChunks = await searchStartupKB({
+    query: `${contractType} 불공정 조항 약관 규제 판례`,
+    category: 'compliance',
+    topK: 5,
+  });
+
+  // 4. 사용자 관심 영역별 추가 검색
+  const concernChunks = await Promise.all(
+    concerns.map(concern =>
+      searchStartupKB({
+        query: `${contractType} ${concern} 주의사항 판례`,
+        category: 'contract-agreement',
+        topK: 3,
+      })
+    )
+  );
+
+  return formatRAGContext({
+    checklist: checklistChunks,
+    legalArticles,
+    unfairTerms: unfairChunks,
+    concernSpecific: concernChunks.flat(),
+  });
+}
+```
+
+**AI Gateway 라우팅 — `legal` 모드:**
+```
+계약서분석요청
+  └─ callAIText({ intentHint: 'legal', appSlug: 'contract', ... })
+       └─ 게이트웨이: Upstage Solar Pro → Gemini 2.5 Flash
+            (Solar Pro는 한국어·법률 도메인 특화 모델)
+```
+
+**글로벌 채팅 어시스턴트 search_startup_kb 툴 등록:**
+```typescript
+// src/lib/chat/tools.ts 에 추가 (Phase 4)
+const searchStartupKBTool: PlatformTool = {
+  name: "search_startup_kb",
+  displayLabel: "창업 법률 지식 검색",
+  description: "법령·판례·표준계약서·지원사업 등 창업 관련 지식베이스에서 검색합니다.",
+  input_schema: {
+    type: "object",
+    properties: {
+      query: { type: "string", description: "검색 질의" },
+      category: { type: "string", description: "지식 카테고리 (선택)" },
+    },
+    required: ["query"],
+  },
+  async execute(input, userId) {
+    return searchStartupKB({ query: input.query, category: input.category });
+  },
+};
+```
+
+**추가 환경변수:**
+```
+STARTUPMATE_API_URL          Railway API (단기RAG)          즉시
+SUPABASE_URL                 Supabase URL (중기직접연결)     Phase4
+SUPABASE_SERVICE_ROLE_KEY    Supabase 서비스롤키             Phase4
+GEMINI_API_KEY               embedding-001                  Phase4
+```
+
+---
+
+### 3-5. 공통 UI 레이어
+
+:::ai
+DONT: 이 섹션은 "무엇을 만드는가"(컴포넌트목록·역할). "어떻게 보이는가"(토큰·className)는 design-system.aimd 참조.
+:::
+
+**공통 컴포넌트:**
+```
+컴포넌트          설명                                       위치
+──────────────────────────────────────────────────────────────────────
+GlobalHeader      로고, 앱전환드롭다운, 사용자메뉴, 알림       layout/GlobalHeader.tsx
+AppGrid           홈화면 — app_registry 기반 앱타일목록        components/platform/AppGrid.tsx
+PlanBadge         현재플랜 표시(Free/Pro/Team)                components/platform/PlanBadge.tsx
+UsageMeter        AI사용량 게이지바                           components/platform/UsageMeter.tsx
+UpgradePrompt     플랜업그레이드 유도 모달                     components/platform/UpgradePrompt.tsx
+NotificationBell  인앱알림 아이콘·드롭다운                     components/platform/NotificationBell.tsx
+AppSidebar        앱별 사이드바 공통뼈대                       layout/AppSidebar.tsx
+DisclaimerBanner  "AI결과는 참고용" 공통고지                   components/shared/DisclaimerBanner.tsx
+```
+
+**레이아웃 계층:**
+```
+app/
+├── layout.tsx                 ← 최상위(폰트·메타·테마)
+├── (platform)/layout.tsx      ← GlobalHeader(로그인후 공통)
+│   ├── page.tsx               앱 그리드 홈
+│   ├── dashboard/page.tsx     사용자 대시보드
+│   ├── settings/page.tsx      계정 설정
+│   └── billing/page.tsx       구독·결제
+└── apps/
+    ├── [app-slug]/layout.tsx  ← AppSidebar(앱별 공통)
+    └── [app-slug]/page.tsx    ← 각 앱 진입점
+```
+
+---
+
+### 3-6. 공통 미들웨어
+
+:::flow middleware
+1. 인증체크 → 미로그인 시 /login 리다이렉트
+2. 온보딩체크 → 프로필미완성 시 /onboarding 리다이렉트
+3. 플랜체크 → Pro전용앱 접근 시 업그레이드유도
+:::
+
+---
+
+### 3-7. 파일 스토리지 (Cloudflare R2)
+
+:::ai
+CRITICAL: RLS 없음 → Workers API Route에서 직접 소유권체크 필수.
+CRITICAL: 모든 API Route는 lib/r2/client.ts 헬퍼만 사용. env.R2_BUCKET 직접 접근 금지.
+FREEZE: R2 키 규칙 = {userId}/{appSlug}/{nanoid}.{ext} — 변경시 기존파일 접근불가.
+:::
+
+```typescript
+// lib/r2/client.ts — 이 함수를 통해서만 R2에 접근
+export async function getFile(userId: string, r2Key: string) {
+  if (!r2Key.startsWith(`${userId}/`)) {
+    throw new Error("Forbidden: 다른 사용자의 파일에 접근할 수 없습니다.");
+  }
+}
+```
+
+---
+
+### 3-8. 공통 이메일·알림
+
+```
+src/lib/email/
+  sender.ts              ← Resend 공통발송기
+  templates/
+    welcome.tsx           회원가입 환영
+    usage-warning.tsx     사용량 80% 초과경고
+    vat-deadline.tsx      AI-Tax: 부가세 신고 D-30
+    plan-expiry.tsx       구독 만료예정
+```
+
+---
+
+### 3-9. 관리자 포털 (Admin)
+
+:::ai
+CTX: profiles.role = 'user' | 'admin'. 관리자 /admin 라우트.
+     /admin/apps에서 is_active on/off → 즉시 AppGrid 반영. 코드배포 불필요.
+:::
+
+```
+src/app/admin/
+  users/          전체 사용자목록·관리
+  subscriptions/  구독현황
+  usage/          AI API 비용모니터링
+  apps/           앱레지스트리 관리(is_active·sort_order·min_plan)
+```
+
+---
+
+### 3-10. 앱 레지스트리 & Manifest 컨벤션 (Stage 1.5)
+
+:::ai
+CTX: 새 앱 추가 = 폴더 드롭 + manifest.ts 작성 + 빌드.
+CRITICAL: DB 마이그레이션은 자동화불가 — 새 앱 추가 시 항상 수동 실행.
+:::
+
+**manifest.ts 예시:**
+```typescript
+// src/app/apps/tax/manifest.ts
+export const manifest: AppManifest = {
+  slug: 'tax',
+  name: 'AI-Tax',
+  description: '세무 자동화 — 영수증 업로드부터 부가세 신고까지',
+  icon: '🧾',
+  category: 'automation',
+  appColor: 'amber',   ← 디자인시스템 appColor 표와 일치
+  minPlan: 'FREE',
+  route: '/apps/tax',
+  sortOrder: 1,
+}
+```
+
+**AppColor 타입:**
+```typescript
+// 표준 (-400 토큰)
+'violet'|'emerald'|'sky'|'cyan'|'amber'|'indigo'|'fuchsia'
+|'orange'|'teal'|'blue'|'rose'|'purple'|'lime'|'pink'|'green'|'yellow'|'red'
+// 변형 (팔레트초과앱)
+'sky-300'   // AI-Teambot
+'pink-300'  // AI-Recoder
+'slate'     // 미확정 플레이스홀더
+```
+
+:::flow app-registration
+빌드타임:
+  scripts/sync-registry.ts
+    → src/app/apps/*/manifest.ts 스캔
+    → app_registry upsert (slug기준)
+    → 신규앱 is_active=true로 추가
+
+런타임:
+  AppGrid → app_registry 조회(is_active=true + 플랜필터)
+  미들웨어 → app_registry.min_plan으로 접근제어
+  관리자 → /admin/apps에서 is_active·sort_order·min_plan 변경
+:::
+
+**새 앱 추가 절차:**
+```
+1. src/app/apps/{slug}/ 폴더생성
+2. manifest.ts 작성
+3. src/lib/db/schema/apps/{slug}.ts DB스키마 작성
+4. pnpm db:migrate
+5. pnpm build (sync-registry 자동실행)
+6. 배포 → 관리자패널에서 앱 확인·활성화
+```
+
+**파일위치:**
+```
+src/lib/registry/types.ts      ← AppManifest 인터페이스
+src/lib/registry/loader.ts     ← 런타임 registry 조회헬퍼
+scripts/sync-registry.ts       ← 빌드타임 manifest스캔 → DB upsert
+```
+
+---
+
+### 3-11. AI-Console — 워크스페이스 앱 & 컨텍스트 브리지
+
+:::ai
+CTX: workspace 카테고리 특수앱. AI 컨설팅 비즈니스 운영허브.
+     기획문서: 문서·콘텐츠생성/AI-Console/기획서.md
+SCOPE: 포함=CRM·파이프라인·프로젝트·팀협업·고객포털·MCP서버·채용서브기능
+       미포함=개발이슈트래커·코드리뷰·투자자IR·전담HR시스템
+:::
+
+**AppGrid 렌더링:**
+```
+┌─────────────────────────────────────────────┐
+│  AI-Console  (workspace배너 — 항상최상단)     │
+│  비즈니스운영허브 · 오늘할일3건 · 진행프로젝트2건│
+│                               [열기 →]       │
+└─────────────────────────────────────────────┘
+[일반앱 타일그리드]
+```
+
+**컨텍스트 브리지 — DeepLink 스펙:**
+```
+/apps/{slug}?console_client_id={id}&console_lead_id={id}&[추가파라미터]
+```
+
+```
+AI-Console 진입점          연결앱            DeepLink 파라미터
+──────────────────────────────────────────────────────────────
+파이프라인→제안서생성        proposal         client_id,lead_id,amount,tier
+프로젝트→계약서검토          contract         client_id,project_id
+콘텐츠캘린더→초안작성        content-factory  topic,channel,cta
+고객상세→업무진단            diagnosis        client_id,industry
+재무대시보드→ROI분석         roi              project_id,revenue,cost
+미팅노트→회의록생성          recoder          meeting_id,attendees
+납품물관리→문서저장          mdvault          project_id,deliverable_type
+```
+
+**컨텍스트 수신 규약 (AI-Works 앱 쪽):**
+```typescript
+// query-params 감지 시 자동 pre-fill
+const searchParams = useSearchParams()
+const consoleClientId = searchParams.get('console_client_id')
+const consoleleadId   = searchParams.get('console_lead_id')
+
+// 작업 완료 후 console_redirect=true면 AI-Console로 복귀
+if (status === 'success' && searchParams.get('console_redirect')) {
+  router.push('/apps/console/projects/' + projectId)
+}
+```
+```
+
+**AI-Console 전용 DB 테이블:**
+```
+console_clients·leads·projects·tasks·deliverables·contents
+console_revenues·invoices·communications·objectives·key_results
+console_weekly_reviews·job_postings·interviews
+console_team_members·comments·notifications·activity_log
+console_roi_baselines·roi_events
+console_deeplink_sessions
+tenants·tenant_members
+internal_documents·internal_chunks  ← 회사내부 RAG (Neon pgvector)
+```
+
+#### MCP 서버 레이어
+
+:::api
+AI-Console MCP Server
+
+Resources (읽기):
+  console://clients/{id}         고객정보
+  console://projects/{id}        프로젝트상태
+  console://tasks?assignee={id}  담당태스크목록
+  console://pipeline/summary     파이프라인요약
+  console://finance/monthly      월매출현황
+
+Tools (쓰기):
+  POST create_lead               리드추가
+  PATCH update_task_status       태스크상태변경
+  POST log_communication         소통기록저장
+  POST generate_proposal         제안서빌더트리거(deeplink)
+  POST schedule_followup         팔로업일정등록
+  POST search_internal_kb        회사내부RAG검색(tenant_id자동적용)
+
+Prompts:
+  daily_briefing  "오늘 할 일 알려줘"
+  client_summary  "클라이언트X 현황 요약"
+  pipeline_report "이번달 파이프라인 어때?"
+:::
+
+**개발 단계:**
+```
+Phase1: CRM·파이프라인·프로젝트·재무 + Notion임포트 + MCP서버MVP
+Phase2: 팀원초대·권한관리·코멘트·알림 + 업종별온보딩템플릿
+Phase3: 고객포털 (고객이 직접 진행상황 확인)
+Phase4: 크레딧과금 + ROI대시보드 + DeepLink콜백 + 회사내부RAG + 창업RAG
+Phase5: 멀티테넌트(tenant_id) — 다른팀에게 AI-Console 판매
+```
+
+---
+
+#### 100점 스펙 — 1-A. Notion 임포트
+
+**임포트 플로우:**
+```
+1. "Notion에서 가져오기" 클릭
+2. Notion OAuth 팝업 → 워크스페이스 선택
+3. 임포트할 DB 선택 (고객 DB·프로젝트 DB·태스크 DB)
+4. 필드 매핑 UI → Notion 속성 ↔ AI-Console 필드 연결
+5. 미리보기 → 확인 → 임포트 실행
+6. 완료 리포트 (임포트 건수·실패 항목)
+```
+
+**Notion API → AI-Console 필드 매핑:**
+```
+Notion 속성 타입         AI-Console 매핑
+──────────────────────────────────────────────────────
+title                   name
+rich_text               description / notes
+select / status         status (enum 매칭)
+date                    start_date / due_date
+people                  assignee_id (이메일 매칭)
+number                  amount / estimated_hours
+url                     file_url / external_url
+relation                FK 연결 (클라이언트↔프로젝트)
+files                   R2 업로드 후 URL 저장
+```
+
+**구현위치:**
+```
+src/app/apps/console/api/import/notion/
+  route.ts      ← OAuth callback + 임포트실행 API
+  mapper.ts     ← Notion속성 → console_* 필드 변환
+  validator.ts  ← 필드타입 검증 + 실패로그
+```
+`@notionhq/client` 패키지 필요.
+
+---
+
+#### 100점 스펙 — 1-B. 크레딧 과금 모델
+
+**플랜 구조:**
+```
+플랜       월기본료    기본크레딧      초과크레딧         대상
+────────────────────────────────────────────────────────────
+Free       무료        100크레딧/월    구매불가           1인 체험
+Starter    ₩29,000    500크레딧/월    ₩20/크레딧        1인 창업자
+Team       ₩79,000    2,000크레딧/월  ₩15/크레딧        팀 3~10인
+Pro        ₩199,000   무제한          —                 에이전시·대형팀
+```
+
+**크레딧 소비 단가:**
+```
+AI 기능                              소비크레딧
+───────────────────────────────────────────────
+AI 제안서 생성 (deeplink→빌더)         50
+AI 계약서 검토 (deeplink→계약서앱)     30
+AI 콘텐츠 초안 (deeplink→팩토리)       20
+AI 고객 인사이트 (클라이언트분석)       10
+AI 재무 요약                          5
+MCP 에이전트 Tool 호출 1회            2
+Notion 임포트 (1회)                   0 (무료)
+```
+
+**DB:**
+```sql
+-- 공통테이블 (플랫폼레벨)
+user_credits
+├── user_id         TEXT FK → users.id
+├── tenant_id       TEXT FK → tenants.id
+├── balance         INTEGER DEFAULT 0
+├── plan            TEXT    DEFAULT 'FREE'
+└── reset_at        TIMESTAMPTZ   ← 월초 리셋기준일
+
+credit_transactions
+├── id              UUID PK
+├── user_id         TEXT FK
+├── tenant_id       TEXT FK
+├── amount          INTEGER        ← 양수:충전, 음수:소비
+├── type            TEXT           ← 'charge'|'consume'|'reset'
+├── source          TEXT           ← 앱 slug
+├── description     TEXT
+└── created_at      TIMESTAMPTZ
+```
+
+---
+
+#### 100점 스펙 — 1-C. ROI 대시보드
+
+**측정 지표 3종:**
+```
+① 시간 절약
+   Before: 사용자 최초설정 시 입력 (제안서 작성 평균 X시간)
+   After:  AI 제안서 생성 평균 소요시간 (자동측정)
+   표시:   "제안서 작성시간 -73% (4시간 → 1.1시간)"
+
+② 매출 전환율
+   Before: 리드→계약 전환율 (AI-Console 도입전 입력값)
+   After:  console_leads 데이터로 자동계산
+   표시:   "파이프라인 전환율 +18% (22% → 40%)"
+
+③ 절약 금액 환산
+   (절약시간) × (시간당단가: 사용자설정)
+   표시:   "이번달 절약비용 ₩840,000 (12시간 × ₩70,000)"
+```
+
+**측정 데이터 수집:**
+```typescript
+// src/app/apps/console/lib/roi-tracker.ts
+type ROIEvent = {
+  action: 'proposal_generated' | 'contract_reviewed' | 'content_drafted'
+  duration_ms: number      // 실제 소요시간
+  baseline_ms: number      // 사용자 설정 기준시간
+  saved_ms: number         // baseline - duration
+  tenant_id: string
+  user_id: string
+}
+```
+
+**DB:**
+```
+console_roi_baselines    ← 사용자 설정 기준값 (도입전시간·시간당단가)
+console_roi_events       ← AI기능 사용 이벤트 (소요시간 측정)
+```
+
+---
+
+#### 100점 스펙 — 2. MCP 서버 MVP (Phase 1 동시출시)
+
+```typescript
+// src/app/apps/console/mcp/server.ts
+// @modelcontextprotocol/sdk 사용
+
+const server = new McpServer({ name: 'ai-console', version: '1.0.0' })
+
+// MVP Resources (읽기전용 5개)
+server.resource('clients',          listClients)
+server.resource('client/{id}',       getClient)
+server.resource('projects',          listProjects)
+server.resource('tasks/today',       getTodayTasks)
+server.resource('pipeline/summary',  getPipelineSummary)
+
+// MVP Tools (쓰기 3개)
+server.tool('create_lead',       CreateLeadSchema,       createLead)
+server.tool('update_task',       UpdateTaskSchema,       updateTask)
+server.tool('log_communication', LogCommunicationSchema, logCommunication)
+
+// MVP Prompts (일상사용 2개)
+server.prompt('daily_briefing',  dailyBriefing)
+server.prompt('client_summary',  clientSummary)
+```
+
+**MCP 어댑터 레이어 (스펙변경 대비):**
+```typescript
+// src/lib/mcp/adapter.ts
+export interface MCPAdapter {
+  registerResource(name: string, handler: ResourceHandler): void
+  registerTool(name: string, schema: ZodSchema, handler: ToolHandler): void
+  registerPrompt(name: string, handler: PromptHandler): void
+  start(transport: Transport): Promise<void>
+}
+```
+
+**Claude Desktop 연결 설정:**
+```json
+// claude_desktop_config.json
+{
+  "mcpServers": {
+    "ai-console": {
+      "command": "npx",
+      "args": ["-y", "@ai-works/console-mcp"],
+      "env": {
+        "CONSOLE_API_KEY": "사용자_API_키",
+        "CONSOLE_URL": "https://aiworks.kr/apps/console"
+      }
+    }
+  }
+}
+```
+
+---
+
+#### 100점 스펙 — 3. 서비스 비즈니스 타깃 확장 + 업종별 템플릿
+
+**타깃 업종 확장:**
+```
+업종               템플릿 프리셋     파이프라인 단계
+──────────────────────────────────────────────────────────────────
+AI 컨설팅          기본(현재설계)   리드→상담→제안→계약→납품
+마케팅 에이전시    캠페인 중심      브리핑→기획→제작→승인→보고
+IT 외주·개발사     스프린트없는프로젝트  요건→설계→개발→QA→납품
+교육 스타트업      수강생 CRM       문의→상담→등록→수강→수료
+프리랜서 팀        경량 버전        의뢰→견적→작업→검수→완료
+```
+
+**온보딩 플로우 (5분 이내):**
+```
+Step1: 업종선택 (5개 카드 중 택1) — 30초
+Step2: 팀규모 선택 (1인/2~5인/6인+) — 10초
+Step3: 첫번째 고객등록 또는 Notion임포트 선택 — 2분
+Step4: 대시보드 자동생성 + 투어 — 2분
+→ 완료: 즉시 사용가능한 상태
+```
+
+**업종별 템플릿 DB:**
+```sql
+console_industry_templates
+├── id, industry_key, name
+├── pipeline_stages   JSONB  ← 단계명·순서·색상
+├── default_tasks     JSONB  ← 프로젝트생성 시 자동생성할 태스크목록
+└── sample_data       JSONB  ← 온보딩용 샘플데이터
+```
+
+---
+
+#### 100점 스펙 — 4. DeepLink 콜백
+
+**콜백 플로우:**
+```
+AI-Console                    AI-Works 앱
+────────────────────────────────────────────────
+[제안서 생성 클릭]
+     │
+     ├─ deeplink 호출 ──────────→ 제안서빌더 열림
+     │   ?console_callback_url     (고객데이터 pre-fill)
+     │   &console_session_id       │
+     │                            [생성 완료]
+     │                              │
+     │ ←── POST callback ──────────┘
+     │     { session_id, result_type, data }
+     │
+[AI-Console 자동업데이트]
+  Lead에 제안서 첨부
+  상태 "제안서발송"으로 변경
+  팀원 알림 발송
+```
+
+**콜백 API 스펙:**
+```typescript
+// POST /api/console/callback
+type ConsoleCallbackPayload = {
+  session_id:   string
+  source_app:   string          // 'proposal'|'contract'|'content-factory'|...
+  result_type:  'proposal'|'contract'|'document'|'analysis'
+  tenant_id:    string
+  user_id:      string
+  data: {
+    title:      string
+    file_url?:  string          // R2 저장된 결과물 URL
+    summary?:   string
+    metadata?:  Record<string, unknown>
+  }
+}
+// 수신 후: session_id로 원래 컨텍스트 조회 → 엔티티에 결과물 연결 → 팀알림 → ROI이벤트
+```
+
+**세션 테이블:**
+```sql
+console_deeplink_sessions
+├── id (session_id)   UUID PK
+├── tenant_id         TEXT
+├── user_id           TEXT
+├── source_entity     TEXT     ← 'lead'|'project'|'client'
+├── source_id         TEXT
+├── target_app        TEXT
+├── params            JSONB
+├── status            TEXT     ← 'pending'|'completed'|'expired'
+├── result            JSONB
+├── created_at        TIMESTAMPTZ
+└── expires_at        TIMESTAMPTZ  ← 24시간후 만료
+```
+
+---
+
+#### 100점 스펙 — 5. tenant_id 멀티테넌트 설계
+
+:::ai
+CRITICAL: Phase1 MVP부터 tenant_id를 모든 콘솔 테이블에 추가. 추후 SaaS화 재작업 없이 바로 전환.
+:::
+
+**테넌트 구조:**
+```sql
+tenants
+├── id            UUID PK
+├── name          TEXT         ← "홍길동 컨설팅"
+├── slug          TEXT UNIQUE  ← URL slug
+├── plan          TEXT DEFAULT 'FREE'
+├── industry_key  TEXT
+├── owner_id      TEXT FK → users.id
+└── created_at    TIMESTAMPTZ
+
+tenant_members
+├── tenant_id     TEXT FK → tenants.id
+├── user_id       TEXT FK → users.id
+├── role          TEXT   ← 'owner'|'admin'|'member'|'partner'
+└── joined_at     TIMESTAMPTZ
+```
+
+**RLS 정책:**
+```sql
+CREATE POLICY tenant_isolation ON console_clients
+  USING (tenant_id = current_setting('app.current_tenant_id'));
+```
+
+**미들웨어 테넌트 컨텍스트 주입:**
+```typescript
+// src/middleware.ts
+const tenantId = await getTenantIdFromSession(req)
+await db.execute(sql`SET app.current_tenant_id = ${tenantId}`)
+```
+
+**SaaS 전환 시 추가 작업 (Phase5):**
+```
+✅ tenant_id 이미있음 → 데이터격리 완료
+✅ RLS 이미있음 → 보안완료
+추가필요:
+  - 테넌트별 커스텀도메인 (/t/{slug} → {slug}.aiworks.kr)
+  - 테넌트별 결제 (토스 customerKey per tenant)
+  - 테넌트 관리자패널 (/super-admin)
+```
+
+---
+
+### 3-12. AI-Claworks — 에이전트 레이어
+
+:::ai
+CTX: agent 카테고리 최상위레이어.
+     AI-Console MCP로 경영데이터 읽고 → Claude로 판단 → 18개 앱(스킬) 호출.
+     목標: 창업자 요청없이 먼저보고·먼저말하고·함께실행. 100% 무인화.
+     기획문서: workspace/AI-Claworks/기획서.md
+CRITICAL: ANTHROPIC_API_KEY 필요. Claude 기반 판단.
+:::
+
+**플랫폼 계층:**
+```
+AI-Claworks (agent, sortOrder:-1)
+    ↓ MCP
+AI-Console  (workspace, sortOrder:0)
+    ↓ DeepLink + Skill호출
+AI-Works 18개 앱 (01~18)
+    ↓ @startupmate/ai-model-router
+AI모델 레이어
+  dev:  Gemini 2.5 Flash / Upstage Solar Pro
+  prod: + Claude Sonnet / GPT-4o (폴백포함)
+```
+
+**카카오톡 채널 연동:**
+
+:::flow kakao-webhook
+1. 사용자 (카카오톡) → 메시지전송
+2. 카카오 비즈니스채널 Webhook POST
+3. AI-Works 백엔드 (Cloudflare Worker)
+4. 즉시 "처리중..." 반환 (카카오 5초제한 충족)
+5. 백그라운드: AI-Console MCP호출 → 답변생성
+6. 카카오 채널메시지 API 푸시 (5~15초후)
+:::
+
+:::ai
+CRITICAL: 카카오 Webhook 5초타임아웃 해결 = 비동기 2단계패턴.
+CTX: 최초1회 AI-Works 로그인 → console_members.kakao_user_id 매핑 → 이후자동 tenant_id 식별.
+     상세: 문서·콘텐츠생성/AI-Rag/260325최종AI-Works내부RAG시스템기획서.md 섹션11.
+:::
+
+**AI-Claworks가 호출하는 MCP Tools:**
+```
+search_startup_kb    창업기업RAG(법령·지원사업)        Supabase
+search_internal_kb   회사내부RAG(사규·계약·회의록)      Neon
+create_lead          리드추가                          Neon
+update_task_status   태스크상태변경                     Neon
+log_communication    소통기록저장                       Neon
+generate_proposal    AI제안서빌더트리거                  —
+schedule_followup    팔로업일정등록                     Neon
+```
+
+**자동 실행 시나리오:**
+```
+상황                  호출스킬              결과
+───────────────────────────────────────────────────────
+파이프라인 리드감지     AI 제안서 빌더        제안서초안 자동생성
+계약만료 D-30감지       AI 계약서 검토기       갱신계약서초안
+세금신고 마감감지        AI-Tax               신고준비리스트
+마케팅캘린더 도래       AI 콘텐츠 팩토리      콘텐츠초안생성
+지원사업 공고감지       AI 사업계획서          신청서초안
+```
+
+---
+
+## 4. 앱별 개발 항목 (Per-App Layer)
+
+:::ai
+CTX: 각 앱은 이 항목들만 개발. auth·billing·DB연결·AI게이트웨이·R2는 공통처리됨.
+:::
+
+### 앱별 개발 체크리스트
+
+각 앱이 반드시 만들어야 하는 것:
+
+```
+apps/[app-slug]/
+  manifest.ts         ← 앱선언 (slug, name, category, minPlan ...) Stage1.5 필수
+  page.tsx            ← 앱랜딩 (소개, CTA)
+  (main)/
+    layout.tsx        ← 앱전용 사이드바메뉴 정의
+    [기능별페이지들]/
+  api/[전용라우트들]/
+  components/[전용컴포넌트들]/
+src/lib/db/schema/[app-slug].ts  ← 앱전용 DB스키마 (prefix 권장: tax_, copy_ 등)
+```
+
+### 앱별 개발 상세
+
+#### 01. AI 업무진단기 (`/apps/diagnosis/`)
+```
+페이지:   진단위자드(4단계)·분석대기화면·결과페이지·히스토리
+API:      POST /api/diagnosis/analyze
+DB:       diagnosis_sessions
+AI:       업무진단 → 도구추천 로직
+공통:     auth, ai-gateway
+```
+
+#### 02. AI 제안서 빌더 (`/apps/proposal/`)
+```
+페이지:   입력위자드·생성중화면·결과뷰어·내라이브러리
+API:      POST /api/proposal/generate
+          GET|DELETE /api/proposal/[id]
+          GET|POST /api/proposal/templates
+          POST /api/proposal/proposals/[id]/export
+DB:       proposal_projects·proposal_templates·proposal_user_settings
+AI:       업종별 제안서 생성 프롬프트
+공통:     auth, ai-gateway, r2 (PDF 내보내기)
+편입메모:  서버생성API·공통ai-gateway연동·템플릿저장API·R2기반HTML/Word내보내기+브라우저PDF인쇄
+```
+
+#### 03. AI 콘텐츠 팩토리 (`/apps/content-factory/`)
+```
+페이지:   브랜드프로필·콘텐츠생성기·아이디어뱅크·캘린더·내콘텐츠
+API:      POST /api/content/generate
+          GET /api/content/calendar
+          GET|POST /api/content/workspace
+DB:       content_projects·content_items·brand_profiles·content_calendar
+AI:       플랫폼별(블로그/인스타/유튜브) 콘텐츠생성
+공통:     auth, ai-gateway
+편입메모:  브랜드저장·멀티채널생성·라이브러리/캘린더저장 연결
+```
+
+#### 04. 업무 자동화 설계기 (`/apps/automation/`)
+```
+페이지:   입력위자드·자동화설계결과·레시피라이브러리·ROI시뮬레이터
+API:      POST /api/automation/design
+DB:       automation_designs·automation_recipes
+AI:       업무입력 → 자동화설계 및 도구추천
+공통:     auth, ai-gateway
+```
+
+#### 05. AI 데이터 분석기 (`/apps/analytics/`)
+```
+페이지:   업로드워크스페이스·구조인식결과·차트그리드·스토리텔링요약·자연어질의패널
+API:      POST /api/apps/analytics/analyze
+          POST /api/apps/analytics/query
+          GET /api/apps/analytics/reports
+DB:       analytics_datasets·analytics_reports
+AI:       파일구조인식 → 분석유형추천 → KPI/차트생성 → 인사이트/액션제안
+공통:     auth, ai-gateway, r2 (원본파일업로드), api_usage_logs
+편입메모:  rule-based 분석엔진과 analyze/query/reports API 우선연결
+```
+
+#### 06. AI 프롬프트 스토어 (`/apps/prompt-store/`) — 독립앱 (2026-03-25 분리확정)
+```
+페이지:   스토어홈(팩탐색·검색·필터)·프롬프트상세·내라이브러리·커스텀에디터·바로실행모달·팀허브(B2B)
+API:      GET /api/prompts (목록·검색)
+          GET /api/prompts/[id] (상세)
+          POST /api/prompts/execute (실행)
+          POST /api/prompts/save (라이브러리저장)
+          GET|POST /api/prompts/library (내라이브러리)
+          GET|POST /api/prompts/team (팀허브B2B)
+DB:       prompts·prompt_packs·user_prompt_library·prompt_ratings·team_prompt_hubs·team_prompt_members
+AI:       프롬프트실행엔진 (변수{{key}} 치환 후 공통AI게이트웨이 호출)
+공통:     auth, ai-gateway, billing (팩구매연동), api_usage_logs
+수익:     B2C: 팩단품구매(토스페이먼츠) / B2B: AI-Works Pro/Team 플랜에 팀허브포함
+개발순서:  1.스토어홈+실행모달MVP → 2.라이브러리 → 3.팩구매 → 4.팀허브(B2B) → 5.RAG연동
+```
+
+#### 07~11. 기타 비즈니스 앱
+```
+07 사업계획서    POST /api/business-plan/generate  business_plans·financial_models
+08 카피라이터    POST /api/copy/generate           copy_projects·items·brand_presets
+              특이사항: localStorage → DB 전환, 자체auth → 공통auth 교체
+09 계약서검토기  POST /api/contract/analyze        contract_reviews·contract_issues
+              편입메모: 현재 mock결과. 다음단계: ai-gateway·R2·AI-Pdf handoff 연결
+10 고객응대생성기 POST /api/cs/generate-faq·email  cs_assets·cs_brand_profiles·chatbot_configs
+11 ROI계산기    POST /api/roi/calculate            roi_calculations·roi_benchmarks (AI없음)
+```
+
+#### 15. AI-Teambot (`/apps/teambot/`) — 독립앱 완성 95%, 이식대상
+
+:::ai
+CTX: 현재스택 = FastAPI + SQLite/PostgreSQL + HTML 프론트엔드.
+     이식방향: Next.js API Route + Drizzle ORM + React UI. model_router.py → 공통AI게이트웨이.
+:::
+
+```
+페이지:   챗봇메인(업종선택+SSE스트리밍채팅)·기획서생성기(업종별뷰어+MD내보내기)·관리자(FAQ·문서·온보딩CRUD)
+API:      GET /api/teambot/industries
+          GET /api/teambot/industry/[key]
+          GET /api/teambot/industry/[key]/faqs|documents|onboardings|kpis
+          POST /api/teambot/chat/stream (SSE)
+          GET|DELETE /api/teambot/memory
+          POST /api/teambot/feedback
+DB:       teambot_industries·features·faqs·documents·onboardings·kpis·feedbacks
+AI로직:   질문유형분류(quick/deep/legal/doc) → 공통AI게이트웨이 라우팅
+          세션기반 LLM메모리 (임베딩유사도 중복방지 포함)
+공통:     auth, ai-gateway (model_router.py 로직흡수), api_usage_logs
+이식메모:  model_router.py(Gemini/Solar/Claude어댑터)·llm_memory.py(세션기억)
+          → 공통AI게이트웨이 + 앱전용 메모리레이어로 분리이식.
+          SQLite 6개테이블 → Neon PostgreSQL teambot_ prefix.
+          관리자기능 → /admin/apps/teambot 공통어드민으로 통합 검토.
+```
+
+#### 17. AI-Recoder (`/apps/recoder/`) — 독립앱 완성 69%, 이식대상
+
+:::ai
+CTX: 현재스택 = HTML + Vanilla JS + Express + better-sqlite3 (SQLite). 앱명: VOXAI.
+     이식방향: HTML+VanillaJS → Next.js React. better-sqlite3+FTS5 → Neon+tsvector 전문검색.
+              오디오파일 = Cloudflare R2 ({userId}/recoder/{id}.webm).
+:::
+
+```
+페이지:   녹음화면(Web Speech API + Whisper전환)·전사결과·AI요약·액션아이템·내기록(FTS검색)
+API:      POST /api/recoder/recordings (저장)
+          POST /api/recoder/recordings/[id]/upload (오디오업로드)
+          GET /api/recoder/recordings (목록)
+          GET|PUT|DELETE /api/recoder/recordings/[id]
+          GET /api/recoder/search (전문검색)
+          GET /api/recoder/stats
+DB:       recoder_recordings (id·name·date·duration·transcript·ai_result·mode·stt_engine·audio_file)
+          recoder_tags (recording_id·tag)
+AI로직:   ① Whisper API (음성→텍스트 전사)
+          ② Claude claude-sonnet-4 (전사→회의록요약·액션아이템추출)
+공통:     auth, ai-gateway (quick타입), r2 (오디오파일 최대100MB)
+이식메모:  Whisper → 공통AI게이트웨이에 stt 타입 추가 검토.
+```
+
+#### 19. AI-Fax (`/apps/fax/`) — 독립앱 완성 71%, 이식대상
+
+:::ai
+CTX: 현재스택 = React + Vite + TypeScript + Express + Prisma (PostgreSQL). 앱명: FaxAI.
+     이식복잡도 높음 — 외부서비스3종(팝빌·Clova OCR·Kakao)·Multi-tenant·BullMQ큐.
+:::
+
+```
+페이지:   팩스수신함·팩스상세(OCR+AI분석)·팩스발송·스팸관리·조직설정·활동로그
+API:      GET|POST /api/fax/faxes
+          GET /api/fax/faxes/[id] (OCR+분석포함)
+          POST /api/fax/faxes/send
+          GET /api/fax/stats
+          GET|PUT /api/fax/settings
+          POST|DELETE /api/fax/spam-rules
+DB:       fax_organizations·org_members·faxes·ocr_results·ai_analyses
+          fax_extracted_dates·masking_logs·spam_rules·org_settings·activity_logs (10개)
+AI로직:   ① Naver Clova OCR (팩스이미지→텍스트)
+          ② GPT-4o → doc타입 공통AI게이트웨이 (문서분류·요약·액션아이템·라우팅)
+          ③ 민감정보 자동마스킹
+외부서비스: 팝빌(Popbill) API·Naver Clova OCR·Kakao 알림톡
+공통:     auth, ai-gateway(doc타입), r2, pgmq (OCR·AI분석 비동기큐 — BullMQ+Redis대체)
+이식메모:  Supabase Auth → Better Auth.
+          S3/MinIO → Cloudflare R2.
+          BullMQ+Redis → pgmq.
+          Multi-tenant Organization → 플랫폼 Team플랜 사용자 조직으로 매핑.
+          GPT-4o → 공통AI게이트웨이 doc라우팅.
+          환경변수: POPBILL_LINK_ID·POPBILL_SECRET_KEY (.dev.vars)
+```
+
+#### 13. AI-Sheet (`/apps/sheet/`) — Airtable 대체
+
+:::ai
+CTX: 포지셔닝: Excel대체 → Airtable대체. 사용자가 직접 스키마정의, 동일 데이터를 여러 뷰로 전환.
+:::
+
+**뷰 타입 로드맵:**
+```
+뷰 타입         설명                              우선순위
+────────────────────────────────────────────────────────────
+Table뷰         스프레드시트형태. 기본뷰             MVP
+Kanban뷰        컬럼기반 카드보드                   MVP
+Gallery뷰       카드형 격자                        Phase2
+Calendar뷰      날짜필드기반 캘린더                 Phase2
+Timeline뷰      시작~종료기간기반 간트차트            Phase3
+Form뷰          외부 데이터수집 폼                  Phase3
+```
+
+**AI-Console과의 역할 분리:**
+```
+구분          AI-Console                       AI-Sheet
+────────────────────────────────────────────────────────────────────────────────
+데이터성격     비즈니스운영 고정스키마(CRM·재무)    사용자정의 자유형스키마
+뷰전환         Console데이터 전용 (칸반·타임라인)   어떤데이터든 5가지뷰
+Notion대체     비즈니스운영 DB                     범용DB + 자유형뷰
+```
+
+**manifest.ts:**
+```typescript
+export const manifest: AppManifest = {
+  slug: 'sheet',
+  name: 'AI-Sheet',
+  description: 'Airtable 대체 — 자유형 데이터베이스 + Table·Kanban·Gallery·Timeline·Calendar 뷰',
+  icon: 'Table2',
+  category: 'document',
+  appColor: 'yellow',
+  minPlan: 'FREE',
+  route: '/apps/sheet',
+  sortOrder: 13,
+}
+```
+
+**핵심 DB 테이블:**
+```
+sheet_databases     ← 사용자정의 데이터베이스 (이름·스키마)
+sheet_fields        ← 필드정의 (text·number·select·date·relation 등)
+sheet_records       ← 레코드 (행데이터)
+sheet_field_values  ← 필드값 (EAV패턴)
+sheet_views         ← 뷰설정 (타입·필터·정렬·그룹)
+sheet_relations     ← 데이터베이스간 관계
+```
+
+**AI 통합:**
+```
+AI 컬럼     수식대신 자연어로 컬럼값 자동생성 ("이 고객의 리스크를 한줄로 요약해")
+자동분류     텍스트입력 시 select 필드값 AI추천
+요약뷰       Gallery 카드에 AI요약 자동생성
+AI-Console연동  Console데이터를 Sheet로 내보내 커스텀뷰 생성가능
+```
+
+#### 16. AI-Tax (`/apps/tax/`) — 이식대상
+```
+페이지:   대시보드·문서업로드·거래내역·부가세리포트·설정
+API:      문서·거래·리포트·워크스페이스 CRUD
+DB:       tax_workspaces·tax_documents·tax_transactions·tax_transaction_items·tax_categories
+AI로직:   3단계 파이프라인 (분류→추출→카테고리)
+공통:     auth, ai-gateway, r2 (영수증업로드), billing
+특이사항:  현재 Supabase+Prisma 버전 완성 → Drizzle+Better Auth로 이식필요.
+           한국세법 특화로직은 그대로 재사용.
+```
+
+---
+
+## 5. 공통 vs 앱별 한눈에 보기
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   AI-Works 플랫폼                        │
+│                                                          │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │           공통 레이어 (1회 개발, 전체 공유)          │    │
+│  │                                                  │    │
+│  │  🔐 Auth        💳 Billing      🗄️ DB(공통테이블)  │    │
+│  │  🤖 AI Gateway  📧 이메일       🔔 알림            │    │
+│  │  🎨 UI공통컴포넌트 🛡️ 미들웨어   👤 관리자포털       │    │
+│  └─────────────────────────────────────────────────┘    │
+│                           │                              │
+│        ┌──────────────────┼──────────────────┐          │
+│        ▼                  ▼                  ▼          │
+│  ┌──────────┐       ┌──────────┐       ┌──────────┐    │
+│  │  AI-Tax  │       │카피라이터│       │  업무     │    │
+│  │  DB스키마 │       │  DB스키마 │       │ 진단기    │    │
+│  │  API     │       │  API     │       │  앱전용   │    │
+│  │  컴포넌트 │       │  컴포넌트 │       │          │    │
+│  └──────────┘       └──────────┘       └──────────┘    │
+└─────────────────────────────────────────────────────────┘
+```
+
+**개발 공수 비율:**
+```
+레이어        개발공수         재사용범위
+──────────────────────────────────────────
+공통레이어     전체의 30~40%   모든앱 (22개)
+앱별로직       전체의 60~70%   해당앱 1개
+```
+
+---
+
+## 6. 기술 스택
+
+```
+레이어           기술                                    용도
+────────────────────────────────────────────────────────────────────────
+프레임워크        Next.js 15 (App Router)                 풀스택·SSR
+UI               Tailwind CSS v4                          스타일링
+인증             Better Auth                              이메일·소셜, Edge Runtime호환
+ORM              Drizzle ORM                              Edge Runtime호환·타입안전
+DB               Neon PostgreSQL                          Serverless·Edge연결지원
+파일스토리지      Cloudflare R2                            이미지·PDF·음성
+AI               공통AI게이트웨이 + Model Router           모든앱 AI기능
+비동기작업        pgmq                                     긴AI작업 큐처리(PostgreSQL내장)
+결제             토스페이먼츠                              구독·과금
+이메일           Resend                                   트랜잭션이메일
+배포             Cloudflare Pages + Workers               엣지배포
+어댑터           @opennextjs/cloudflare                   Next.js → Cloudflare변환
+설정             wrangler.toml                            R2바인딩·환경변수
+모니터링         Sentry + Cloudflare Analytics            에러·성능
+에이전트프로토콜  MCP (Model Context Protocol)             Claworks↔Console연결
+내부RAG          Neon pgvector + @ai-works/rag-engine     회사내부지식베이스
+창업RAG          Supabase pgvector (StartupMateAI)        법령·지원사업·업종지식
+카카오채널        비즈니스채널 Webhook                     AI-Claworks 진입채널
+```
+
+---
+
+## 7. 개발 로드맵
+
+:::flow development-roadmap
+Step1: 공통인프라
+  Cloudflare Pages+Workers+R2 설정
+  Neon PostgreSQL + 공통DB스키마(app_registry포함)
+  Better Auth (이메일+Google+Kakao)
+  AI Gateway + 모델라우터
+  AppManifest + sync-registry.ts (Stage1.5)
+
+Step2: Billing
+  토스페이먼츠 구독플랜
+  사용량추적 시스템
+  업그레이드유도 UX
+
+Step3: 첫 앱 통합
+  AI-Tax → Better Auth교체·Prisma→Drizzle이식
+  AI-Copywriter → server.js제거·공통API Route전환
+
+Step4: 나머지앱 순차이식
+  앱별 우선순위 순차통합
+  HTML프로토타입 → Next.js 전환
+
+Step5: AI-Console + AI-Claworks MVP
+  AI-Console: CRM·파이프라인·프로젝트·재무
+  MCP서버 (Resources5개+Tools6개) 동시출시
+  AI-Claworks: 카카오 Webhook연동·비동기2단계패턴
+  STARTUPMATE_API_URL → search_startup_kb 단기연동
+
+Step6: 회사내부RAG
+  Neon pgvector 확장활성화 (1회)
+  internal_documents·chunks 테이블마이그레이션
+  @ai-works/rag-engine 패키지구축
+  AI-Mdvault onSave훅 → 자동인덱싱
+  search_internal_kb MCP Tool 추가
+
+Step7: 고도화
+  search_startup_kb 중기전환(SUPABASE_DB_URL 직접연결)
+  공통대시보드 (모든앱 활동한눈에)
+  팀기능 (조직·멤버십)
+  AI-Claworks Slack채널 추가 (Growth/Pro)
+:::
+
+---
+
+## 8. Cloudflare 제약사항
+
+:::rules
+edge-runtime:
+  node-apis: 금지 (Web Crypto API·fetch 사용)
+  prisma: 금지 (Drizzle ORM으로 교체)
+  supabase-auth: 금지 (Better Auth로 교체)
+  next/image: unoptimized=true 설정필수
+  long-workers: pgmq로 큐처리
+  wrangler-compat: nodejs_compat 플래그 wrangler.toml에 설정
+:::
+
+---
+
+## 9. 주의사항 & 트레이드오프
+
+```
+항목                  장점                         단점·주의
+────────────────────────────────────────────────────────────────────
+단일DB(Neon)          관리용이·비용절감              한앱 트래픽이 전체에 영향가능
+단일Next.js앱         빠른개발·코드공유              앱수↑ 시 빌드시간증가
+공통AI게이트웨이       비용추적·제한·모델fallback     라우팅버그 → 전체앱영향
+Better Auth          UX통일·개발절감               Supabase Auth RLS대신 수동권한체크
+Cloudflare R2        저렴·Workers직접접근            RLS없음 → API에서 소유권체크필수
+pgmq                 PostgreSQL내장·별도서비스불필요  Inngest대비 UI/모니터링약함
+app_registry         코드배포없이 앱on/off           DB없는앱 접근불가·sync-registry필수
+```
+
+**Turborepo 전환 기준:**
+- 앱 30개↑ 또는 빌드시간 5분↑
+- 팀 3명↑ 앱별 독립배포 필요
+- 특정앱 엔터프라이즈 고객 전용분리 필요
+
+---
+
+## 10. 폴더 구조 (통합 플랫폼)
+
+```
+platform/
+├── wrangler.toml
+├── open-next.config.ts
+├── drizzle.config.ts
+├── .dev.vars
+│
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx
+│   │   ├── (auth)/
+│   │   │   ├── login/page.tsx
+│   │   │   ├── register/page.tsx
+│   │   │   └── onboarding/page.tsx
+│   │   ├── (platform)/
+│   │   │   ├── layout.tsx               ← GlobalHeader
+│   │   │   ├── page.tsx                 ← 앱그리드 홈
+│   │   │   ├── dashboard/page.tsx
+│   │   │   ├── settings/page.tsx
+│   │   │   └── billing/page.tsx
+│   │   ├── apps/
+│   │   │   ├── tax/
+│   │   │   ├── copywriter/
+│   │   │   ├── diagnosis/
+│   │   │   └── [app-slug]/
+│   │   ├── api/
+│   │   │   ├── auth/[...all]/route.ts   ← Better Auth 핸들러
+│   │   │   ├── billing/
+│   │   │   ├── files/
+│   │   │   ├── tax/
+│   │   │   └── [app]/
+│   │   └── admin/
+│   │
+│   ├── components/
+│   │   ├── platform/
+│   │   │   ├── GlobalHeader.tsx
+│   │   │   ├── AppGrid.tsx
+│   │   │   ├── PlanBadge.tsx
+│   │   │   ├── UsageMeter.tsx
+│   │   │   └── UpgradePrompt.tsx
+│   │   ├── layout/
+│   │   └── apps/
+│   │       └── [app-slug]/
+│   │
+│   ├── lib/
+│   │   ├── db/
+│   │   │   ├── client.ts                ← Drizzle + Neon HTTP
+│   │   │   └── schema/
+│   │   │       ├── auth.ts              ← Better Auth 테이블
+│   │   │       ├── common.ts            ← 공통테이블 (app_registry·user_app_pins)
+│   │   │       ├── index.ts
+│   │   │       └── apps/
+│   │   │           └── tax.ts
+│   │   ├── auth/
+│   │   │   ├── server.ts
+│   │   │   └── client.ts
+│   │   ├── ai/
+│   │   │   ├── gateway.ts
+│   │   │   ├── usage-check.ts
+│   │   │   ├── cost-calculator.ts
+│   │   │   └── apps/tax/
+│   │   ├── r2/client.ts
+│   │   ├── email/sender.ts
+│   │   └── registry/
+│   │       ├── types.ts
+│   │       └── loader.ts
+│   ├── middleware.ts
+│   └── env.d.ts
+│
+├── scripts/
+│   └── sync-registry.ts
+│
+└── drizzle/
+```
+
+---
+
+## 부록 A. AI-Mdvault 편입 기준
+
+### A-1. 핵심 플로우
+
+:::flow mdvault-core
+Marketplace탐색
+  → Template Detail
+  → Execute Studio
+  → Vault 저장
+  → Workspace 공유/재사용
+:::
+
+### A-2. 앱 전용 DB 테이블
+
+```
+mdvault_templates·template_runs·documents·document_versions
+mdvault_workspace_templates·workspace_documents·template_reviews
+```
+
+### A-3. AI-Mdvault ↔ 회사내부 RAG 연동
+```
+is_template=true  → {{변수}} 빈템플릿 → 인덱싱 제외
+is_template=false → 저장/수정 시 onSave훅 → @ai-works/rag-engine 자동인덱싱
+  → markdown_section 청킹 (## 섹션=청크)
+  → internal_chunks INSERT (tenantId, sourceType='mdvault', sourceId)
+  → metadata.sourceId → /apps/mdvault/vault/[sourceId] DeepLink
+```
+
+---
+
+## 부록 B. 채팅 어시스턴트 앱별 통합 로드맵
+
+### B-1. 앱별 채팅 통합 체크리스트
+```
+앱                  context 주입                         툴등록               완료기준
+───────────────────────────────────────────────────────────────────────────────────
+AI-Mdvault          currentDocument (열린문서)            search_templates ✅   Vault POST완성후
+AI-Contract         currentContract (분석중계약서)         analyze_contract      실AI API완성후
+PDF Editor Pro      currentPdf (열린PDF 메타)             analyze_pdf·sign_req  PDF Vault완성후
+AI-Tax              currentReportPeriod (처리중기간)       classify_expense      E2E검증후
+AI-Analytics        currentDataset (분석중파일명)          run_analysis          R2업로드완성후
+AI-Proposal         currentProposal (작성중제안서)         refine_proposal       내보내기완성후
+AI-Word             currentDocument (편집중문서)           edit_document         API·DB연결후
+AI-Sheet            currentSheet (편집중시트명)            query_sheet           API·DB연결후
+AI-ContentFactory   currentBrand (선택된브랜드)            generate_content      캘린더완성후
+```
+
+### B-2. 현재 채팅 인프라 상태 (2026-03-25)
+```
+✅ 완료
+  platform/src/components/global-chat/GlobalChatProvider·GlobalChatPanel.tsx
+  platform/src/app/api/chat/route.ts
+  platform/src/lib/chat/tools.ts (search_templates·navigate_to_app·list_vault_documents)
+  platform/src/lib/chat/types.ts
+
+⏳ 앱 완성 후 추가
+  tools.ts — 앱별 전용툴 (analyze_contract·analyze_pdf·run_analysis 등)
+  GlobalChatProvider — currentData 타입확장
+
+🔜 3단계
+  platform/src/lib/db/schema/chat.ts  (chat_messages 테이블)
+  platform/src/app/api/chat/history/route.ts
+```
+
+---
+
+## 부록 C. AI 프롬프트 스토어 — 독립앱 설계
+
+:::ai
+HIST: 이전에 AI-Mdvault 흡수 결정 → 2026-03-25 번복.
+      B2C 판매구조·B2B 내부허브 컨셉이 AI-Mdvault와 근본적으로 다름.
+:::
+
+### C-1. 제품 포지셔닝
+
+```
+B2C: 업종별 프롬프트팩 1~3만원 단품구매 → AI-Works 첫결제 트리거
+B2B: AI-Works Pro/Team 플랜에 팀 내부 프롬프트허브로 포함
+     회사내부RAG(internal_chunks) 연결된 전용프롬프트
+     AI-Claworks가 "저장된팀프롬프트" 자동실행
+```
+
+### C-2. AI-Claworks 연동
+
+:::flow claworks-prompt-store
+1. 사용자 (카카오톡) → "사업계획서요약 만들어줘"
+2. AI-Console MCP → team_prompt_hubs 조회
+3. "사업계획서요약" 팀프롬프트 발견
+4. POST /api/prompts/execute 자동호출
+5. 결과 → 카카오톡 반환
+:::
+
+### C-3. DB 테이블
+
+:::schema prompts
+#id: TEXT PK
+pack_id: TEXT FK → prompt_packs
+title: TEXT!
+description: TEXT?
+category: TEXT
+content: TEXT!   ← {{변수}} 포함
+variables: JSONB ← [{key, label, placeholder}]
+tags: JSONB
+is_public: bool = true
+rating_avg: decimal = 0
+use_count: int = 0
+created_at: datetime = now()
+:::
+
+:::schema prompt_packs
+#id: TEXT PK
+name: TEXT!
+category: TEXT?
+price_krw: int = 0   ← 0=무료
+prompt_count: int = 0
+is_active: bool = true
+:::
+
+:::schema user_prompt_library
+#id: TEXT PK
+user_id: TEXT FK → "user"
+prompt_id: TEXT?   ← null이면 커스텀
+title: TEXT!
+content: TEXT!     ← 커스텀편집버전
+is_custom: bool = false
+saved_at: datetime = now()
+:::
+
+### C-4. 개발 순서
+
+```
+Step1: 스토어홈 + 프롬프트상세 + 바로실행모달 MVP
+Step2: 내 라이브러리 저장·커스텀편집
+Step3: 프롬프트팩 토스페이먼츠 구매연동
+Step4: 팀허브(B2B) — 팀공유·역할관리
+Step5: 회사내부RAG + AI-Claworks 연동
+Step6: UGC — 사용자프롬프트 등록·평가(Phase2)
+```
+
+---
+
+*이 문서는 AI-Works 통합 플랫폼 설계의 기준 문서입니다.*
+*최종수정: 2026-03-27 (2차)*

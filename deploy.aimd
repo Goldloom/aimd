@@ -1,0 +1,145 @@
+---
+aimd: "1.2"
+project: aimd
+---
+
+:::ai
+CTX: AIMD 프로젝트 배포 정보.
+     aimd-cli (npm 패키지) + aimd-vscode (VS Code 확장) 두 가지로 구성.
+FREEZE: npm 패키지 이름 "aimd-cli" — 이미 배포됨
+:::
+
+# AIMD 배포 정보
+
+## aimd-cli (npm 패키지)
+
+:::schema
+name: aimd-cli
+version: 0.1.0
+registry: https://registry.npmjs.org
+status: published
+:::
+
+:::api
+GET https://www.npmjs.com/package/aimd-cli -> 패키지 페이지
+:::
+
+### 설치
+
+```bash
+npm install -g aimd-cli
+```
+
+### 사용법
+
+```bash
+aimd build <file>          # AI용 빌드 (inherits 병합, :::human 제거)
+aimd build <file> --for-human  # 인간용 빌드 (:::ai 제거, :::schema→테이블)
+aimd tokens <file>         # 토큰 수 분석
+aimd tokens <file> --for-ai    # AI용 기준 토큰 분석
+aimd convert <file.md>     # .md → .aimd 변환
+```
+
+### 배포 절차
+
+:::flow publish-cli
+1. 코드 수정
+2. package.json version 업
+3. npm run build
+4. npm publish --otp=OTP코드
+:::
+
+---
+
+## aimd-vscode (VS Code 확장)
+
+:::schema
+name: aimd-vscode
+version: 0.1.0
+publisher: aimd
+status: local-only @since(v0.1.0)
+marketplace: @deprecated  # 미배포 — VS Code Marketplace 등록 필요
+:::
+
+### 로컬 설치
+
+```bash
+cd aimd-vscode
+npm run build
+npx vsce package --no-dependencies
+code --install-extension aimd-vscode-0.1.0.vsix
+```
+
+### 기능
+
+:::rules
+commands:
+  toggle-ai-block: Ctrl+Shift+A
+  extract-for-ai: Ctrl+Shift+E
+  convert-to-aimd: 명령 팔레트
+  show-inherits-chain: 명령 팔레트
+
+features:
+  syntax-highlight: .aimd 문법 강조
+  token-counter: 상태바 우측 토큰 수 표시
+  completion: ::: 입력 시 블록 자동완성
+  hover: :::abbr 단어 호버 정의 표시
+  definition: @ref Ctrl+클릭 파일 이동
+  decorator: :::ai 블록 토글 숨김
+:::
+
+### VS Code Marketplace 배포 절차
+
+:::flow publish-vscode
+1. https://marketplace.visualstudio.com/manage 접속
+2. Publisher 생성 (Publisher ID: aimd)
+3. Personal Access Token 발급 (Azure DevOps)
+4. npx vsce login aimd
+5. npx vsce publish
+:::
+
+:::ai
+TODO: VS Code Marketplace 배포 미완료.
+      현재는 .vsix 파일 수동 설치만 가능.
+      배포 시 publisher ID "aimd" 사용.
+:::
+
+---
+
+## 프로젝트 구조
+
+:::deps
+aimd/
+  aimd-cli/          → npm 패키지 (배포 완료)
+    src/
+      index.ts       → CLI 진입점
+      parser.ts      → AIMD 파서 코어
+      commands/
+        build.ts     → build 커맨드
+        tokens.ts    → tokens 커맨드
+        convert.ts   → convert 커맨드
+  aimd-vscode/       → VS Code 확장 (로컬 설치)
+    src/
+      extension.ts   → 확장 진입점
+      parser.ts      → 파서 (aimd-cli와 독립)
+      providers/
+        completion.ts
+        hover.ts
+        definition.ts
+        decorator.ts
+        tokenCounter.ts
+:::
+
+---
+
+## 버전 히스토리
+
+:::diff v1.1 -> v1.2
++ inherits 지시사항 상속 체계
++ CRITICAL[n] 우선순위 레벨
++ @deprecated / @since 버전 어노테이션
++ 목차
++ 기능별 도구 의존도 참조표
++ inherits 엣지케이스 명세 (순환참조, 충돌)
++ AIMD의 독창성 섹션
+:::

@@ -1,0 +1,121 @@
+{
+  "publisher": "aimd",
+  "name": "aimd-vscode",
+  "displayName": "AIMD - AI-Enhanced Markdown",
+  "description": "AIMD 형식 지원: 문법 강조, 토큰 카운터, 정규화, 검증, ACP 추출, :::ai 블록 토글",
+  "version": "0.1.0",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Programming Languages", "Other"],
+  "activationEvents": ["onLanguage:aimd", "onLanguage:markdown"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "aimd",
+        "aliases": ["AIMD", "aimd"],
+        "extensions": [".aimd"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "aimd",
+        "scopeName": "text.aimd",
+        "path": "./syntaxes/aimd.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.block.yaml": "yaml",
+          "meta.embedded.block.typescript": "typescript",
+          "meta.embedded.block.json": "json"
+        }
+      }
+    ],
+    "commands": [
+      {
+        "command": "aimd.toggleAiBlock",
+        "title": "AIMD: :::ai 블록 표시/숨김 토글",
+        "key": "ctrl+shift+a"
+      },
+      {
+        "command": "aimd.extractForAi",
+        "title": "AIMD: AI용 컨텍스트 클립보드 복사",
+        "key": "ctrl+shift+e"
+      },
+      {
+        "command": "aimd.convertToAimd",
+        "title": "AIMD: .md → .aimd 변환"
+      },
+      {
+        "command": "aimd.generateFromPrompt",
+        "title": "AIMD: prompt → .aimd 생성"
+      },
+      {
+        "command": "aimd.normalizeAimd",
+        "title": "AIMD: .aimd 정규화"
+      },
+      {
+        "command": "aimd.validateAimd",
+        "title": "AIMD: .aimd 검증"
+      },
+      {
+        "command": "aimd.extractAcp",
+        "title": "AIMD: 역할별 ACP 추출"
+      },
+      {
+        "command": "aimd.showInheritsChain",
+        "title": "AIMD: 상속 체인 보기"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "aimd.toggleAiBlock",
+        "key": "ctrl+shift+a",
+        "when": "editorLangId == aimd"
+      },
+      {
+        "command": "aimd.extractForAi",
+        "key": "ctrl+shift+e",
+        "when": "editorLangId == aimd"
+      }
+    ],
+    "configuration": {
+      "title": "AIMD",
+      "properties": {
+        "aimd.tokenModel": {
+          "type": "string",
+          "default": "cl100k_base",
+          "enum": ["cl100k_base", "o200k_base"],
+          "description": "토큰 카운터 기준 모델"
+        },
+        "aimd.showTokenCountInStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "상태바에 토큰 수 표시"
+        },
+        "aimd.aiBlockOpacity": {
+          "type": "number",
+          "default": 0.4,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "숨김 상태의 :::ai 블록 투명도"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "watch": "npm run build -- --watch",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "js-tiktoken": "^1.0.15"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.4.0",
+    "@vscode/vsce": "^2.24.0"
+  }
+}
