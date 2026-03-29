@@ -4,9 +4,12 @@
   "displayName": "AIMD - AI-Enhanced Markdown",
   "description": "AIMD v1.4 support: syntax highlighting, token counter, normalize, validate, ACP extraction, :::state block toggle",
   "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aimd/aimd"
+  },
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Programming Languages", "Other"],
-  "activationEvents": ["onLanguage:aimd", "onLanguage:markdown"],
   "main": "./dist/extension.js",
   "contributes": {
     "languages": [
@@ -30,6 +33,10 @@
       }
     ],
     "commands": [
+      {
+        "command": "aimd.welcome",
+        "title": "AIMD: Welcome & Status"
+      },
       {
         "command": "aimd.toggleStateBlock",
         "title": "AIMD: Toggle :::state block visibility",

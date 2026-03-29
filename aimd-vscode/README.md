@@ -51,7 +51,7 @@ AIMD_LLM_MODEL=gpt-4.1-mini                   # optional
 
 Core blocks (required, in order): `:::intent` → `:::rules` → `:::state` → `:::flow`
 
-See [spec/AIMD-v1.4.md](../spec/AIMD-v1.4.md) for full specification.
+See spec/AIMD-v1.4.md for full specification.
 
 ## License
 

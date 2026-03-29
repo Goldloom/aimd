@@ -67,6 +67,29 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   // ─── Commands ───────────────────────────────────────
+  
+  // AIMD: Welcome & Status
+  context.subscriptions.push(
+    vscode.commands.registerCommand('aimd.welcome', () => {
+      const version = vscode.extensions.getExtension('aimd.aimd-vscode')?.packageJSON.version;
+      const editor = vscode.window.activeTextEditor;
+      const langId = editor?.document.languageId;
+      const fileName = editor?.document.fileName;
+
+      let status = `AIMD Extension v${version} is active.\n\n`;
+      if (editor) {
+        status += `Current file: ${path.basename(fileName || 'unknown')}\n`;
+        status += `Language ID: ${langId}\n`;
+        if (langId !== 'aimd') {
+          status += `\n⚠️ Warning: Language is NOT 'aimd'. Highlighting and snippets might not work.\nPlease click the language selector in the bottom right corner and select 'AIMD'.`;
+        }
+      } else {
+        status += 'Open an .aimd file to see more details.';
+      }
+
+      vscode.window.showInformationMessage(status, { modal: true });
+    })
+  );
 
   // Ctrl+Shift+A: toggle :::state block visibility
   context.subscriptions.push(

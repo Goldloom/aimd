@@ -25,32 +25,32 @@
       "end": "^(:::)$",
       "name": "meta.block.state.aimd",
       "beginCaptures": {
-        "1": { "name": "keyword.control.block.state.aimd" },
-        "2": { "name": "entity.name.tag.aimd" }
+        "1": { "name": "keyword.control.directive.aimd" },
+        "2": { "name": "entity.name.section.aimd" }
       },
       "endCaptures": {
-        "1": { "name": "keyword.control.block.state.aimd" }
+        "1": { "name": "keyword.control.directive.aimd" }
       },
       "patterns": [
         {
-          "match": "^(v\\d+|n\\d+)(:.*)",
+          "match": "^(v\\d+)(:)",
           "captures": {
-            "1": { "name": "keyword.control.directive.verified.aimd" },
-            "2": { "name": "string.unquoted.aimd" }
+            "1": { "name": "markup.inserted.aimd" },
+            "2": { "name": "punctuation.separator.key-value.aimd" }
           }
         },
         {
-          "match": "^(o\\d+|ask\\d+)(:.*)",
+          "match": "^(o\\d+|ask\\d+)(:)",
           "captures": {
-            "1": { "name": "keyword.control.directive.open.aimd" },
-            "2": { "name": "string.unquoted.aimd" }
+            "1": { "name": "markup.changed.aimd" },
+            "2": { "name": "punctuation.separator.key-value.aimd" }
           }
         },
         {
-          "match": "^(a\\d+)(:.*)",
+          "match": "^(a\\d+|n\\d+)(:)",
           "captures": {
-            "1": { "name": "keyword.control.directive.assumption.aimd" },
-            "2": { "name": "string.unquoted.aimd" }
+            "1": { "name": "markup.italic.aimd" },
+            "2": { "name": "punctuation.separator.key-value.aimd" }
           }
         }
       ]
@@ -58,26 +58,25 @@
     "humanBlock": {
       "begin": "^(:::human)(.*)$",
       "end": "^(:::)$",
-      "name": "meta.block.human.aimd",
+      "name": "comment.block.human.aimd",
       "beginCaptures": {
         "1": { "name": "comment.block.human.aimd" },
         "2": { "name": "comment.block.human.aimd" }
       },
       "endCaptures": {
         "1": { "name": "comment.block.human.aimd" }
-      },
-      "contentName": "comment.block.human.aimd"
+      }
     },
     "schemaBlock": {
       "begin": "^(:::schema)(.*)$",
       "end": "^(:::)$",
       "name": "meta.block.schema.aimd",
       "beginCaptures": {
-        "1": { "name": "storage.type.block.aimd" },
-        "2": { "name": "entity.name.type.aimd" }
+        "1": { "name": "storage.type.class.aimd" },
+        "2": { "name": "entity.name.type.class.aimd" }
       },
       "endCaptures": {
-        "1": { "name": "storage.type.block.aimd" }
+        "1": { "name": "storage.type.class.aimd" }
       },
       "patterns": [
         {
@@ -90,11 +89,11 @@
         },
         {
           "match": "(!|\\?)",
-          "name": "keyword.operator.aimd"
+          "name": "keyword.operator.logical.aimd"
         },
         {
           "match": "(#\\w+)",
-          "name": "variable.other.constant.aimd"
+          "name": "constant.language.aimd"
         }
       ]
     },
@@ -103,16 +102,16 @@
       "end": "^(:::)$",
       "name": "meta.block.api.aimd",
       "beginCaptures": {
-        "1": { "name": "storage.type.block.aimd" },
-        "2": { "name": "entity.name.tag.aimd" }
+        "1": { "name": "storage.type.function.aimd" },
+        "2": { "name": "entity.name.function.aimd" }
       },
       "endCaptures": {
-        "1": { "name": "storage.type.block.aimd" }
+        "1": { "name": "storage.type.function.aimd" }
       },
       "patterns": [
         {
           "match": "\\b(GET|POST|PUT|PATCH|DELETE)\\b",
-          "name": "support.function.http-method.aimd"
+          "name": "keyword.other.http-method.aimd"
         },
         {
           "match": "(@\\w+)(:)",
@@ -128,11 +127,11 @@
       "end": "^(:::)$",
       "name": "meta.block.shared.aimd",
       "beginCaptures": {
-        "1": { "name": "storage.type.block.aimd" },
-        "2": { "name": "entity.name.tag.aimd" }
+        "1": { "name": "keyword.control.directive.aimd" },
+        "2": { "name": "string.unquoted.aimd" }
       },
       "endCaptures": {
-        "1": { "name": "storage.type.block.aimd" }
+        "1": { "name": "keyword.control.directive.aimd" }
       }
     },
     "refAnnotation": {
@@ -143,15 +142,15 @@
       "patterns": [
         {
           "match": "^#{1,6}\\s.+$",
-          "name": "markup.heading.aimd"
+          "name": "markup.heading.markdown"
         },
         {
           "match": "\\*\\*[^*]+\\*\\*",
-          "name": "markup.bold.aimd"
+          "name": "markup.bold.markdown"
         },
         {
           "match": "`[^`]+`",
-          "name": "markup.inline.raw.aimd"
+          "name": "markup.inline.raw.string.markdown"
         }
       ]
     }
