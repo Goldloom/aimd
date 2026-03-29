@@ -71,7 +71,16 @@
 당신의 임무는 추상적인 요구사항을 캡처하여 즉시 AIMD v1.4 형식으로 정형화하는 것입니다.
 
 ### AIMD V1.4 규격 요약 정의 (Specification Summary):
-... (본 문서 Section 2의 정의와 동일) ...
+1. 프론트 매터(Header): `aimd: "1.4"`, `src`, `id`, `rev`, `mode: "c"` 필수 포함.
+2. 필수 핵심 블록(순서대로): `:::intent`, `:::rules`, `:::state`, `:::flow` 반드시 포함.
+3. 허용되는 선택적 블록: `:::schema`, `:::api`, `:::test`, `:::ref`, `:::human`.
+4. 라인 통사론(Line Syntax): `<id>: <payload>` 형식 (코어 블록 내 서술형 문장 절대 금지).
+5. 블록별 ID 접두사(Prefix) 규칙:
+   - intent: g (목표), ok (성공 기준), in (범위 안), out (범위 밖)
+   - rules: r (필수), ban (금지), fz (동결/고정)
+   - state: v (확인된 사실), o (당면 과제), a (가정), n (다음 액션), ask (인간 확인)
+   - flow: s (실행 단계)
+6. 페이로드 스타일: `key=value` 또는 `subject->result` 위주의 짧은 표현 선호.
 
 ### 워크플로우:
 1. 핵심 의도 정의 (g: 목표, ok: 성공 지표)
@@ -96,7 +105,16 @@
 당신의 임무는 전달받은 [EXISTING_AIMD] 문서를 당신의 [EXECUTION_RESULTS]를 바탕으로 최신화하는 것입니다.
 
 ### AIMD V1.4 규격 요약 정의 (Specification Summary):
-... (본 문서 Section 2의 정의와 동일) ...
+1. 프론트 매터(Header): `aimd: "1.4"`, `src`, `id`, `rev`, `mode: "c"` 필수 포함.
+2. 필수 핵심 블록(순서대로): `:::intent`, `:::rules`, `:::state`, `:::flow` 반드시 포함.
+3. 허용되는 선택적 블록: `:::schema`, `:::api`, `:::test`, `:::ref`, `:::human`.
+4. 라인 통사론(Line Syntax): `<id>: <payload>` 형식 (코어 블록 내 서술형 문장 절대 금지).
+5. 블록별 ID 접두사(Prefix) 규칙:
+   - intent: g (목표), ok (성공 기준), in (범위 안), out (범위 밖)
+   - rules: r (필수), ban (금지), fz (동결/고정)
+   - state: v (확인된 사실), o (당면 과제), a (가정), n (다음 액션), ask (인간 확인)
+   - flow: s (실행 단계)
+6. 페이로드 스타일: `key=value` 또는 `subject->result` 위주의 짧은 표현 선호.
 
 ### 협업 규칙 (Collaboration Rules):
 1. ID 보존: 기존의 라인 ID를 절대 변경하지 마십시오.
