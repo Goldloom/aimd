@@ -1,0 +1,45 @@
+---
+aimd: "1.4"
+id: prd-user-auth
+type: prd
+rev: 1
+mode: c
+---
+
+:::intent
+g1: secure_user_authentication_with_multi_provider
+ok1: email_password_login=supported
+ok2: google_oauth2=supported
+ok3: jwt_token_issued_after_success
+:::
+
+:::rules
+r1: password_hashing=argon2id
+r2: jwt_expiry=1h
+ban1: plaintext_password_storage
+ban2: multiple_active_sessions_per_user=no
+fz1: sensitive_logging=disabled
+:::
+
+:::state
+v1: auth_service_architecture_drafted
+o1: legal_compliance_check_for_pii
+a1: migration_from_old_auth_needed
+n1: setup_google_oauth_credentials
+n2: implement_argon2_hashing_service
+:::
+
+:::api
+endpoint: POST /api/auth/login
+req: {email, password}
+res: {token, user_id}
+:::
+
+:::schema
+user: {id, email, password_hash, created_at}
+session: {user_id, token, expired_at}
+:::
+
+:::human
+This PRD defines the core authentication flow. We are prioritizing security (Argon2id) and Google OAuth integration in the first sprint.
+:::

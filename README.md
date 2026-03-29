@@ -43,6 +43,27 @@ AIMD is purpose-built for **Retrieval-Augmented Generation (RAG)** and semantic 
 
 ---
 
+## AIMD for Multi-Agent Orchestration
+
+AIMD is a native **Canonical State Management** layer for multi-agent systems and orchestrators. It transforms the chaotic exchange of free-form prose into a predictable, line-addressed semantic handshake:
+
+1.  **Dynamic Role Projection (ACP)**: Orchestrators can serve filtered views (e.g., `ACP-BE`, `ACP-FE`) of the same document to specialized agents, ensuring they receive relevant context while slashing input tokens.
+2.  **Lossless Task Handoff**: The `:::state` block (with `v`, `o`, `n` prefixes) captures a snapshot of verified facts, pending issues, and next steps that any following agent can resume with 100% fidelity.
+3.  **Granular Delta Updates**: Orchestrators can communicate intent via line-level operations (`add`, `drop`, `set`) instead of resending full documents, minimizing inter-agent traffic and token overhead.
+4.  **Enforced Logic Consistency**: By centralizing goals (`:::intent`) and constraints (`:::rules`), orchestrators maintain a single source of truth that all sub-agents must adhere to, preventing logic drift across the swarm.
+---
+
+## AIMD for AI-Native PRD Engineering
+
+Transmuting a traditional Product Requirement Document (PRD) into AIMD creates a "living specification" that AI agents can execute without ambiguity:
+
+1.  **Zero Ambiguity**: Converts passive prose ("The system should be secure") into active canonical constraints (`ban1: plaintext_storage`).
+2.  **Implementation-Ready Syntax**: Allows agents to skip the "extraction" phase. The structured blocks (`:::api`, `:::schema`) are immediately consumable by coding agents.
+3.  **Real-Time Progress Tracking**: The `:::state` block serves as a real-time dashboard, tracking verified features (`v`) and pending tasks (`n`) directly within the requirement document.
+4.  **Token-Efficient Maintenance**: Large PRDs are expensive to process. AIMD delivers the same logic density at ~20% of the token cost, enabling faster and cheaper multi-agent iterations.
+
+---
+
 ## Quick Example
 
 ```markdown
@@ -188,6 +209,7 @@ aimd/
 │   └── validator-output-schema.json
 └── examples/
     ├── payment-retry.aimd
+    ├── prd-user-auth.aimd          ← NEW: PRD Engineering Example
     ├── validator-output-syntax-pass.json
     ├── validator-output-semantic-warnings.json
     └── validator-output-compression-fail.json
