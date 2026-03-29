@@ -197,9 +197,12 @@ syntax validator → semantic validator → compression validator
 aimd/
 ├── README.md
 ├── spec/
-│   ├── AIMD-v1.4.md               ← Core specification
-│   ├── generator-spec.md           ← Generator specification
-│   └── generator-prompt.md         ← Generator system prompt draft
+│   ├── AIMD-v1.4.md               ← Core specification (English)
+│   ├── AIMD-v1.4-ko.md            ← Core specification (Korean)
+│   ├── generator-spec.md           ← Generator specification (English)
+│   ├── generator-spec-ko.md        ← Generator specification (Korean)
+│   ├── generator-prompt.md         ← Generator system prompt draft (English)
+│   └── generator-prompt-ko.md      ← Generator system prompt draft (Korean)
 ├── validators/
 │   ├── syntax-validator.md
 │   ├── semantic-validator.md
