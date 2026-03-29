@@ -32,6 +32,17 @@ AIMD solves all three by defining a compact, structured canonical memory format 
 
 ---
 
+## AIMD for RAG Optimization
+
+AIMD is purpose-built for **Retrieval-Augmented Generation (RAG)** and semantic memory workflows. It offers four critical advantages over standard prose or Markdown when used in a vector-based knowledge vault:
+
+1.  **Token Efficiency**: By focusing on normalized key-value pairs (e.g., `g1`, `ok1`), `.aimd` delivers high semantic density with minimal overhead, preserving the AI's context window.
+2.  **Structured Chunking**: Sections like `:::intent`, `:::rules`, and `:::flow` provide natural semantic boundaries, enabling precise retrieval of specific context without middle-of-sentence fragmentation.
+3.  **High Semantic Density**: AIMD strips away linguistic noise, allowing Vector DBs to more accurately index and match queries against "core meaning" relationships rather than fluff.
+4.  **Constraint Enforcement**: AI models interpret structured rules (`r1`, `ban1`) as strict logic constraints rather than mere suggestions, drastically reducing hallucinations during task execution.
+
+---
+
 ## Quick Example
 
 ```markdown
