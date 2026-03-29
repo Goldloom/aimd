@@ -227,21 +227,20 @@ Current version: **v1.4** (Proposed Spec)
 AIMD v1.4 is a proposed specification. Implementations and feedback are welcome.
 
 ---
-## AI 워크스페이스 설정 가이드 (AI-Native Setup Guide)
 
-이 프로젝트의 AIMD v1.4 규격을 자신의 실무 프로젝트에 즉시 적용하려면 다음 인프라 파일들을 자신의 프로젝트 루트(Root)로 복사하십시오.
+## 💻 AI-Native Setup Guide
 
-### 1. 전역 규칙 활성화 (`.cursorrules`)
-프로젝트 루트에 `.cursorrules` 파일을 배치하면, 모든 AI 에이전트(Cursor, Copilot 등)가 자동으로 AIMD v1.4 규격을 준수하며 문서를 설계합니다.
+To apply the AIMD v1.4 specification to your own project immediately, copy these infrastructure files to your project root:
 
-### 2. 슬래시 명령어 활성화 (`.agents/workflows/aimd.md`)
-Antigravity와 같은 도구에서 `/aimd` 명령어를 통해 언제든지 규격 요약과 지침을 불러올 수 있습니다.
+### 1. Enable Global Rules (`.cursorrules`)
+Place the `.cursorrules` file in your project root. Any AI agent (Cursor, Copilot, etc.) will then automatically follow the AIMD v1.4 standard for document design.
+
+### 2. Enable Slash Commands (`.agents/workflows/aimd.md`)
+In tools like Antigravity, you can call the `/aimd` command at any time to pull up specification summaries and instructions.
 
 ### 3. Detailed Reference (`spec_en/` folder)
 Invite the AI to learn deep specification details by referencing documents in the `spec_en/` folder.
 
 ---
-
-For English speakers: Copy `.cursorrules`, `.agents/workflows/aimd.md`, and the `spec/` folder to your project root to enable the full power of AIMD v1.4 automatically.
 
 Copyright © 2026 Hwehsoo Kim (Goldloom). Licensed under the Apache License 2.0.
