@@ -1,0 +1,403 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aimd.dev/schema/validator-output/v1.4",
+  "title": "AIMD v1.4 Validator Output",
+  "description": "Unified output schema for AIMD v1.4 syntax, semantic, and compression validators.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "validator",
+    "document",
+    "result",
+    "scores",
+    "issues",
+    "summary"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "aimd.validator.output.v1.4"
+    },
+    "validator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "version"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "syntax",
+            "semantic",
+            "compression",
+            "pipeline"
+          ]
+        },
+        "version": {
+          "type": "string"
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "aimd_version"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "aimd_version": {
+          "type": "string",
+          "enum": [
+            "1.4"
+          ]
+        },
+        "doc_id": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "c",
+            "r",
+            "cr"
+          ]
+        },
+        "source_type": {
+          "type": "string",
+          "enum": [
+            "prompt",
+            "md",
+            "hybrid",
+            "aimd"
+          ]
+        }
+      }
+    },
+    "result": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "pass_with_warnings",
+        "fail"
+      ]
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overall"
+      ],
+      "properties": {
+        "overall": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "structure": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "fidelity": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "consistency": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "state_discipline": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "projection_safety": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "duplication_control": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "semantic_total": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "structural_compression": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "canonical_density": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "redundancy_control": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "projection_cost": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "delta_efficiency": {
+          "$ref": "#/$defs/scoreInteger"
+        },
+        "compression_total": {
+          "$ref": "#/$defs/scoreInteger"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "token_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "token_core": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "token_optional": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "line_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "line_core": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "line_optional": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "prose_line_core": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "duplicate_line_groups": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "long_label_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "acp_avg_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "acp_projection_ratio": {
+          "$ref": "#/$defs/ratio"
+        },
+        "core_prose_ratio": {
+          "$ref": "#/$defs/ratio"
+        },
+        "duplicate_meaning_ratio": {
+          "$ref": "#/$defs/ratio"
+        },
+        "optional_expansion_ratio": {
+          "type": "number",
+          "minimum": 0
+        },
+        "delta_efficiency_ratio": {
+          "$ref": "#/$defs/ratio"
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/issue"
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message"
+      ],
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "highlights": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "critical_issue_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warning_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "info_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "repair_hints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/repairHint"
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "number",
+          "integer"
+        ]
+      }
+    },
+    "projections": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fe": {
+          "$ref": "#/$defs/projectionSummary"
+        },
+        "be": {
+          "$ref": "#/$defs/projectionSummary"
+        },
+        "qa": {
+          "$ref": "#/$defs/projectionSummary"
+        },
+        "review": {
+          "$ref": "#/$defs/projectionSummary"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "scoreInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "ratio": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ]
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "severity",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^(sem|cmp|syn)\\.[a-z0-9_.-]+$"
+        },
+        "block": {
+          "type": "string",
+          "enum": [
+            "front_matter",
+            "intent",
+            "rules",
+            "state",
+            "flow",
+            "schema",
+            "api",
+            "test",
+            "ref",
+            "human",
+            "diff",
+            "document"
+          ]
+        },
+        "line_id": {
+          "type": "string",
+          "pattern": "^[a-z]+[0-9]+$"
+        },
+        "message": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "repair_hint": {
+          "type": "string"
+        }
+      }
+    },
+    "repairHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "action"
+      ],
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "projectionSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "line_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "token_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "missing_required_lines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "pass_with_warnings",
+            "fail"
+          ]
+        }
+      }
+    }
+  }
+}

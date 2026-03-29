@@ -1,0 +1,131 @@
+{
+  "schema_version": "aimd.validator.output.v1.4",
+  "validator": {
+    "kind": "compression",
+    "version": "1.0.0",
+    "run_id": "cmp-example-001",
+    "timestamp": "2026-03-28T12:37:00+09:00"
+  },
+  "document": {
+    "path": "examples/customer-service.aimd",
+    "aimd_version": "1.4",
+    "doc_id": "customer-service",
+    "revision": 4,
+    "mode": "cr",
+    "source_type": "hybrid"
+  },
+  "result": "fail",
+  "scores": {
+    "overall": 61,
+    "structural_compression": 64,
+    "canonical_density": 52,
+    "redundancy_control": 58,
+    "projection_cost": 63,
+    "delta_efficiency": 71,
+    "compression_total": 61
+  },
+  "metrics": {
+    "token_total": 2480,
+    "token_core": 1010,
+    "token_optional": 1470,
+    "line_total": 143,
+    "line_core": 55,
+    "line_optional": 88,
+    "prose_line_core": 20,
+    "duplicate_line_groups": 16,
+    "long_label_count": 31,
+    "acp_avg_tokens": 1520,
+    "acp_projection_ratio": 0.61,
+    "core_prose_ratio": 0.36,
+    "duplicate_meaning_ratio": 0.11,
+    "optional_expansion_ratio": 1.46
+  },
+  "issues": [
+    {
+      "severity": "error",
+      "code": "cmp.density.core_prose_too_high",
+      "block": "state",
+      "line_id": "v2",
+      "message": "core block contains too much prose",
+      "evidence": [
+        "state block contains multiple sentence-style lines instead of canonical payloads"
+      ],
+      "repair_hint": "Split sentence-style content into v/o/a/n lines with normalized payloads"
+    },
+    {
+      "severity": "error",
+      "code": "cmp.structure.optional_overgrowth",
+      "block": "document",
+      "message": "optional blocks exceed core block size and dominate handoff cost",
+      "evidence": [
+        "token_optional=1470",
+        "token_core=1010"
+      ],
+      "repair_hint": "Reduce :::human and :::diff payload and move repeated explanations out of default handoff"
+    },
+    {
+      "severity": "warning",
+      "code": "cmp.projection.acp_too_large",
+      "block": "document",
+      "message": "average ACP size is too large for projection-first handoff",
+      "evidence": [
+        "acp_projection_ratio=0.61"
+      ],
+      "repair_hint": "Reduce optional blocks and repeated rule restatements"
+    }
+  ],
+  "summary": {
+    "message": "Compression validation failed. The document is usable semantically but too expensive for v1.4 canonical handoff targets.",
+    "highlights": [
+      "core prose ratio exceeds fail threshold",
+      "optional blocks dominate token cost",
+      "ACP projection is too large"
+    ],
+    "critical_issue_count": 2,
+    "warning_count": 1,
+    "info_count": 0
+  },
+  "repair_hints": [
+    {
+      "target": "state",
+      "action": "replace prose-style lines with canonical payloads",
+      "reason": "reduces core prose ratio"
+    },
+    {
+      "target": "human/diff blocks",
+      "action": "shrink or remove repeated explanations",
+      "reason": "reduces optional expansion ratio"
+    }
+  ],
+  "thresholds": {
+    "core_prose_ratio_fail": 0.3,
+    "optional_expansion_ratio_fail": 1.0,
+    "acp_projection_ratio_fail": 0.6
+  },
+  "projections": {
+    "fe": {
+      "line_count": 22,
+      "token_count": 610,
+      "missing_required_lines": [],
+      "result": "pass_with_warnings"
+    },
+    "be": {
+      "line_count": 31,
+      "token_count": 804,
+      "missing_required_lines": [],
+      "result": "pass_with_warnings"
+    },
+    "qa": {
+      "line_count": 28,
+      "token_count": 712,
+      "missing_required_lines": [],
+      "result": "pass_with_warnings"
+    },
+    "review": {
+      "line_count": 18,
+      "token_count": 516,
+      "missing_required_lines": [],
+      "result": "fail"
+    }
+  }
+}

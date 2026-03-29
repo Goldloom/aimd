@@ -1,0 +1,101 @@
+{
+  "schema_version": "aimd.validator.output.v1.4",
+  "validator": {
+    "kind": "semantic",
+    "version": "1.0.0",
+    "run_id": "sem-example-001",
+    "timestamp": "2026-03-28T12:36:00+09:00"
+  },
+  "document": {
+    "path": "examples/aiworks-platform.aimd",
+    "aimd_version": "1.4",
+    "doc_id": "aiworks-platform",
+    "revision": 7,
+    "mode": "c",
+    "source_type": "md"
+  },
+  "result": "pass_with_warnings",
+  "scores": {
+    "overall": 86,
+    "fidelity": 91,
+    "consistency": 88,
+    "state_discipline": 76,
+    "projection_safety": 90,
+    "duplication_control": 82,
+    "semantic_total": 86
+  },
+  "issues": [
+    {
+      "severity": "warning",
+      "code": "sem.state.next_not_actionable",
+      "block": "state",
+      "line_id": "n2",
+      "message": "next line is not actionable enough",
+      "evidence": [
+        "n2: improve_billing"
+      ],
+      "repair_hint": "Specify target or action, for example n2: implement_billing_webhook_retry"
+    },
+    {
+      "severity": "warning",
+      "code": "sem.dup.cross_block_duplicate",
+      "block": "rules",
+      "line_id": "r2",
+      "message": "same fact appears in multiple blocks",
+      "evidence": [
+        "r2: plan_sot=subscriptions.plan",
+        "v3: plan_sot=subscriptions.plan"
+      ],
+      "repair_hint": "Keep canonical fact in one block and replace duplicate with line-id reference"
+    }
+  ],
+  "summary": {
+    "message": "Semantic validation passed with warnings. Canonical structure is usable, but next-action clarity and duplication control need improvement.",
+    "highlights": [
+      "source fidelity is strong",
+      "state discipline needs tightening",
+      "ACP projection is safe"
+    ],
+    "critical_issue_count": 0,
+    "warning_count": 2,
+    "info_count": 0
+  },
+  "repair_hints": [
+    {
+      "target": "state.n2",
+      "action": "rewrite as actionable next line",
+      "reason": "improves downstream handoff safety"
+    },
+    {
+      "target": "rules.r2 / state.v3",
+      "action": "remove duplicate fact and keep one canonical location",
+      "reason": "restores one fact, one location discipline"
+    }
+  ],
+  "projections": {
+    "fe": {
+      "line_count": 11,
+      "token_count": 168,
+      "missing_required_lines": [],
+      "result": "pass"
+    },
+    "be": {
+      "line_count": 16,
+      "token_count": 243,
+      "missing_required_lines": [],
+      "result": "pass"
+    },
+    "qa": {
+      "line_count": 12,
+      "token_count": 189,
+      "missing_required_lines": [],
+      "result": "pass"
+    },
+    "review": {
+      "line_count": 9,
+      "token_count": 141,
+      "missing_required_lines": [],
+      "result": "pass_with_warnings"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "schema_version": "aimd.validator.output.v1.4",
+  "validator": {
+    "kind": "syntax",
+    "version": "1.0.0",
+    "run_id": "syn-example-001",
+    "timestamp": "2026-03-28T12:35:00+09:00"
+  },
+  "document": {
+    "path": "examples/payment-retry.aimd",
+    "aimd_version": "1.4",
+    "doc_id": "payment-retry",
+    "revision": 3,
+    "mode": "c",
+    "source_type": "md"
+  },
+  "result": "pass",
+  "scores": {
+    "overall": 96,
+    "structure": 96
+  },
+  "issues": [],
+  "summary": {
+    "message": "Syntax validation passed. Required front matter, core blocks, and line-id format are valid.",
+    "highlights": [
+      "front matter valid",
+      "core block order valid",
+      "line-id format valid"
+    ],
+    "critical_issue_count": 0,
+    "warning_count": 0,
+    "info_count": 0
+  },
+  "repair_hints": []
+}
