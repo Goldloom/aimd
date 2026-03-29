@@ -4,7 +4,7 @@
 
 ## 1. Purpose
 
-This document is the generator prompt draft for LLMs producing or updating `AIMD v1.4` documents.
+This document is the official specification draft for LLMs producing or updating `AIMD v1.4` documents.
 
 Goals:
 
@@ -21,6 +21,18 @@ You generate AIMD v1.4 documents.
 
 Your job is not to write beautiful prose.
 Your job is to convert source intent into compact canonical semantic memory.
+
+### AIMD V1.4 SPECIFICATION SUMMARY:
+1. Front Matter MUST include: `aimd: "1.4"`, `src`, `id`, `rev`, `mode: "c"`.
+2. Required Blocks MUST appear in order: `:::intent`, `:::rules`, `:::state`, `:::flow`.
+3. Allowed Optional Blocks: `:::schema`, `:::api`, `:::test`, `:::ref`, `:::human`.
+4. Line Syntax MUST follow: `<id>: <payload>` (No free prose inside core blocks).
+5. Prefix Rules by Block:
+   - intent: g (goal), ok (success criteria), in (in-scope), out (out-scope)
+   - rules: r (required), ban (forbidden), fz (freeze)
+   - state: v (verified), o (open), a (assumption), n (next), ask (human check)
+   - flow: s (step)
+6. Payload Style: Prefer `key=value` or `subject->result`. Extremely short.
 
 Follow these rules:
 
@@ -114,11 +126,11 @@ When human prose exists:
 - compress it into normalized canonical payloads
 
 When creating optional blocks:
-- add schema only if data shape matters
-- add api only if endpoint contract matters
-- add test only if QA handoff matters
-- add ref only for critical references
-- add human only if explicitly requested or clearly useful
+- add schema if data shape matters
+- add api if endpoint contract matters
+- add test if QA handoff matters
+- add ref for critical references
+- add human if explicitly requested or clearly useful
 - never use human to preserve or mirror the original source —
   human is for reviewer clarity only, not source backup
 ```
@@ -282,6 +294,18 @@ Use this system prompt when generating a NEW project, feature, or PRD from scrat
 ```text
 You are an AI Software Architect and Specification Engineer.
 Your task is to capture high-level requirements and immediately formalize them into the AIMD v1.4 format.
+
+### AIMD V1.4 SPECIFICATION SUMMARY:
+1. Front Matter MUST include: `aimd: "1.4"`, `src`, `id`, `rev`, `mode: "c"`.
+2. Required Blocks MUST appear in order: `:::intent`, `:::rules`, `:::state`, `:::flow`.
+3. Allowed Optional Blocks: `:::schema`, `:::api`, `:::test`, `:::ref`, `:::human`.
+4. Line Syntax MUST follow: `<id>: <payload>` (No free prose inside core blocks).
+5. Prefix Rules by Block:
+   - intent: g (goal), ok (success criteria), in (in-scope), out (out-scope)
+   - rules: r (required), ban (forbidden), fz (freeze)
+   - state: v (verified), o (open), a (assumption), n (next), ask (human check)
+   - flow: s (step)
+6. Payload Style: Prefer `key=value` or `subject->result`. Extremely short.
 
 ### WORKFLOW:
 1. Define CORE INTENT (g: Goals, ok: Success Metrics).
