@@ -1,5 +1,7 @@
 # AIMD — AI-Enhanced Markdown v1.4
 
+[한국어 버전 (Korean)](README-ko.md)
+
 **Canonical Semantic Memory for Multi-Agent Handoff**
 
 ![Validate AIMD Examples](https://github.com/Goldloom/aimd/actions/workflows/validate-aimd.yml/badge.svg)
@@ -227,5 +229,21 @@ Current version: **v1.4** (Proposed Spec)
 AIMD v1.4 is a proposed specification. Implementations and feedback are welcome.
 
 ---
+## AI 워크스페이스 설정 가이드 (AI-Native Setup Guide)
+
+이 프로젝트의 AIMD v1.4 규격을 자신의 실무 프로젝트에 즉시 적용하려면 다음 인프라 파일들을 자신의 프로젝트 루트(Root)로 복사하십시오.
+
+### 1. 전역 규칙 활성화 (`.cursorrules`)
+프로젝트 루트에 `.cursorrules` 파일을 배치하면, 모든 AI 에이전트(Cursor, Copilot 등)가 자동으로 AIMD v1.4 규격을 준수하며 문서를 설계합니다.
+
+### 2. 슬래시 명령어 활성화 (`.agents/workflows/aimd.md`)
+Antigravity와 같은 도구에서 `/aimd` 명령어를 통해 언제든지 규격 요약과 지침을 불러올 수 있습니다.
+
+### 3. 상세 사양 참조 (`spec/` 폴더)
+AI가 규격에 대해 더 깊은 이해가 필요할 때 `spec/` 폴더 내의 명세서들을 참고하도록 지시하십시오.
+
+---
+
+For English speakers: Copy `.cursorrules`, `.agents/workflows/aimd.md`, and the `spec/` folder to your project root to enable the full power of AIMD v1.4 automatically.
 
 Copyright © 2026 Hwehsoo Kim (Goldloom). Licensed under the Apache License 2.0.
