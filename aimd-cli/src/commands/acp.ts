@@ -10,7 +10,7 @@ export function acpCommand(
 ) {
   const resolved = path.resolve(filePath);
   if (!fs.existsSync(resolved)) {
-    console.error(chalk.red(`파일 없음: ${resolved}`));
+    console.error(chalk.red(`File not found: ${resolved}`));
     process.exit(1);
   }
 
@@ -19,7 +19,7 @@ export function acpCommand(
 
   if (options.out) {
     fs.writeFileSync(path.resolve(options.out), result, 'utf-8');
-    console.log(chalk.green(`✓ ACP 저장: ${options.out}`));
+    console.log(chalk.green(`✓ ACP saved: ${options.out}`));
   } else {
     console.log(result);
   }

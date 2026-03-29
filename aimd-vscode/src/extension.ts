@@ -5,7 +5,7 @@ import { TokenCounterProvider } from './providers/tokenCounter';
 import { AimdCompletionProvider } from './providers/completion';
 import { AimdHoverProvider } from './providers/hover';
 import { AimdDefinitionProvider } from './providers/definition';
-import { toggleAiBlocks, updateDecorations } from './providers/decorator';
+import { toggleStateBlocks, updateDecorations } from './providers/decorator';
 import {
   buildForAcp,
   buildForAi,
@@ -26,31 +26,31 @@ const AIMD_SELECTOR: vscode.DocumentSelector = [
 export function activate(context: vscode.ExtensionContext) {
   const output = vscode.window.createOutputChannel('AIMD');
 
-  // 토큰 카운터
+  // Token counter
   const tokenCounter = new TokenCounterProvider();
   tokenCounter.activate(context);
 
-  // 자동완성
+  // Completion provider
   context.subscriptions.push(
     vscode.languages.registerCompletionItemProvider(
       AIMD_SELECTOR,
       new AimdCompletionProvider(),
-      ':',  // ::: 입력 시 트리거
-      '@',  // @ annotation 트리거
+      ':',  // trigger on :::
+      '@',  // trigger on @ annotations
     )
   );
 
-  // 호버 (:::abbr 정의)
+  // Hover provider (block type descriptions)
   context.subscriptions.push(
     vscode.languages.registerHoverProvider(AIMD_SELECTOR, new AimdHoverProvider())
   );
 
-  // @ref Ctrl+클릭 네비게이션
+  // @ref Ctrl+click navigation
   context.subscriptions.push(
     vscode.languages.registerDefinitionProvider(AIMD_SELECTOR, new AimdDefinitionProvider())
   );
 
-  // 에디터 변경 시 데코레이터 업데이트
+  // Update decorations on editor change
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor(editor => {
       if (editor) updateDecorations(editor);
@@ -61,22 +61,22 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // 초기 데코레이터 적용
+  // Apply decorations on activation
   if (vscode.window.activeTextEditor) {
     updateDecorations(vscode.window.activeTextEditor);
   }
 
-  // ─── 커맨드 등록 ───────────────────────────────────────
+  // ─── Commands ───────────────────────────────────────
 
-  // Ctrl+Shift+A: :::ai 블록 토글
+  // Ctrl+Shift+A: toggle :::state block visibility
   context.subscriptions.push(
-    vscode.commands.registerCommand('aimd.toggleAiBlock', () => {
+    vscode.commands.registerCommand('aimd.toggleStateBlock', () => {
       const editor = vscode.window.activeTextEditor;
-      if (editor) toggleAiBlocks(editor);
+      if (editor) toggleStateBlocks(editor);
     })
   );
 
-  // Ctrl+Shift+E: AI용 컨텍스트 클립보드 복사
+  // Ctrl+Shift+E: copy AI context to clipboard
   context.subscriptions.push(
     vscode.commands.registerCommand('aimd.extractForAi', async () => {
       const editor = vscode.window.activeTextEditor;
@@ -84,21 +84,21 @@ export function activate(context: vscode.ExtensionContext) {
 
       const filePath = editor.document.fileName;
       if (!filePath.endsWith('.aimd')) {
-        vscode.window.showWarningMessage('AIMD 파일에서만 사용 가능합니다.');
+        vscode.window.showWarningMessage('Only available in .aimd files.');
         return;
       }
 
       try {
         const content = buildForAi(filePath);
         await vscode.env.clipboard.writeText(content);
-        vscode.window.showInformationMessage('✓ AI용 컨텍스트를 클립보드에 복사했습니다.');
+        vscode.window.showInformationMessage('✓ AI context copied to clipboard.');
       } catch (e) {
-        vscode.window.showErrorMessage(`오류: ${e}`);
+        vscode.window.showErrorMessage(`Error: ${e}`);
       }
     })
   );
 
-  // .md → .aimd 변환
+  // Convert .md to .aimd
   context.subscriptions.push(
     vscode.commands.registerCommand('aimd.convertToAimd', async () => {
       const editor = vscode.window.activeTextEditor;
@@ -106,17 +106,17 @@ export function activate(context: vscode.ExtensionContext) {
 
       const srcPath = editor.document.fileName;
       if (!srcPath.endsWith('.md')) {
-        vscode.window.showWarningMessage('.md 파일에서만 사용 가능합니다.');
+        vscode.window.showWarningMessage('Only available in .md files.');
         return;
       }
 
       const outPath = srcPath.replace(/\.md$/, '.aimd');
       if (fs.existsSync(outPath)) {
         const confirm = await vscode.window.showWarningMessage(
-          `${path.basename(outPath)} 이미 존재합니다. 덮어쓸까요?`,
-          '덮어쓰기', '취소'
+          `${path.basename(outPath)} already exists. Overwrite?`,
+          'Overwrite', 'Cancel'
         );
-        if (confirm !== '덮어쓰기') return;
+        if (confirm !== 'Overwrite') return;
       }
 
       const content = editor.document.getText();
@@ -127,21 +127,20 @@ export function activate(context: vscode.ExtensionContext) {
       const doc = await vscode.workspace.openTextDocument(outPath);
       await vscode.window.showTextDocument(doc);
       vscode.window.showInformationMessage(
-        `✓ 변환 완료: ${path.basename(outPath)} — :::schema, :::api 블록을 수동으로 확인하세요.`
+        `✓ Converted: ${path.basename(outPath)} — review :::schema and :::api blocks manually.`
       );
     })
   );
 
-  // .aimd 정규화
+  // Normalize .aimd
   context.subscriptions.push(
     vscode.commands.registerCommand('aimd.normalizeAimd', async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) return;
 
       const filePath = editor.document.fileName;
-      const isAimd = filePath.endsWith('.aimd');
-      if (!isAimd) {
-        vscode.window.showWarningMessage('.aimd 파일에서만 사용 가능합니다.');
+      if (!filePath.endsWith('.aimd')) {
+        vscode.window.showWarningMessage('Only available in .aimd files.');
         return;
       }
 
@@ -154,11 +153,11 @@ export function activate(context: vscode.ExtensionContext) {
       edit.replace(editor.document.uri, fullRange, normalized);
       await vscode.workspace.applyEdit(edit);
       await editor.document.save();
-      vscode.window.showInformationMessage('✓ AIMD 정규화 완료');
+      vscode.window.showInformationMessage('✓ AIMD normalized.');
     })
   );
 
-  // AIMD 검증
+  // Validate .aimd
   context.subscriptions.push(
     vscode.commands.registerCommand('aimd.validateAimd', async () => {
       const editor = vscode.window.activeTextEditor;
@@ -170,9 +169,9 @@ export function activate(context: vscode.ExtensionContext) {
       output.appendLine(`AIMD validate: ${path.basename(filePath)}`);
 
       if (issues.length === 0) {
-        output.appendLine('✓ issues 없음');
+        output.appendLine('✓ No issues found.');
         output.show(true);
-        vscode.window.showInformationMessage('✓ AIMD 검증 통과');
+        vscode.window.showInformationMessage('✓ AIMD validation passed.');
         return;
       }
 
@@ -183,18 +182,18 @@ export function activate(context: vscode.ExtensionContext) {
       output.show(true);
       const errorCount = issues.filter(i => i.severity === 'error').length;
       const warningCount = issues.filter(i => i.severity === 'warning').length;
-      vscode.window.showWarningMessage(`AIMD 검증 결과: error ${errorCount}, warning ${warningCount}`);
+      vscode.window.showWarningMessage(`AIMD validation: ${errorCount} error(s), ${warningCount} warning(s)`);
     })
   );
 
-  // 역할별 ACP 추출
+  // Extract ACP by role
   context.subscriptions.push(
     vscode.commands.registerCommand('aimd.extractAcp', async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) return;
       const filePath = editor.document.fileName;
       if (!filePath.endsWith('.aimd')) {
-        vscode.window.showWarningMessage('.aimd 파일에서만 사용 가능합니다.');
+        vscode.window.showWarningMessage('Only available in .aimd files.');
         return;
       }
 
@@ -208,8 +207,8 @@ export function activate(context: vscode.ExtensionContext) {
       ];
 
       const selected = await vscode.window.showQuickPick(roleItems, {
-        title: 'ACP 역할 선택',
-        placeHolder: '역할별 ACP 추출',
+        title: 'Select ACP role',
+        placeHolder: 'Extract ACP for role',
       });
       if (!selected) return;
 
@@ -220,23 +219,23 @@ export function activate(context: vscode.ExtensionContext) {
       });
       await vscode.window.showTextDocument(doc, { preview: false });
       await vscode.env.clipboard.writeText(content);
-      vscode.window.showInformationMessage(`✓ ${selected.value} ACP 추출 완료 (클립보드 복사됨)`);
+      vscode.window.showInformationMessage(`✓ ${selected.value} ACP extracted (copied to clipboard).`);
     })
   );
 
-  // prompt 기반 AIMD 생성
+  // Generate AIMD from prompt
   context.subscriptions.push(
     vscode.commands.registerCommand('aimd.generateFromPrompt', async () => {
       const prompt = await vscode.window.showInputBox({
-        title: 'AIMD 생성',
-        prompt: 'AIMD로 구조화할 PRD/요구사항을 입력하세요',
+        title: 'Generate AIMD',
+        prompt: 'Enter a PRD or requirement to convert to AIMD',
         ignoreFocusOut: true,
       });
       if (!prompt?.trim()) return;
 
       const target = await vscode.window.showSaveDialog({
         filters: { AIMD: ['aimd'] },
-        saveLabel: 'AIMD 저장',
+        saveLabel: 'Save AIMD',
       });
       if (!target) return;
 
@@ -260,11 +259,11 @@ export function activate(context: vscode.ExtensionContext) {
       fs.writeFileSync(target.fsPath, content, 'utf-8');
       const doc = await vscode.workspace.openTextDocument(target.fsPath);
       await vscode.window.showTextDocument(doc);
-      vscode.window.showInformationMessage(`✓ AIMD 생성 완료: ${path.basename(target.fsPath)}`);
+      vscode.window.showInformationMessage(`✓ Generated: ${path.basename(target.fsPath)}`);
     })
   );
 
-  // 상속 체인 보기
+  // Show inherits chain
   context.subscriptions.push(
     vscode.commands.registerCommand('aimd.showInheritsChain', async () => {
       const editor = vscode.window.activeTextEditor;
@@ -272,7 +271,7 @@ export function activate(context: vscode.ExtensionContext) {
 
       const chain = buildInheritsChain(editor.document.fileName);
       if (chain.length <= 1) {
-        vscode.window.showInformationMessage('이 파일은 상속 관계가 없습니다.');
+        vscode.window.showInformationMessage('This file has no inheritance chain.');
         return;
       }
 
@@ -283,8 +282,8 @@ export function activate(context: vscode.ExtensionContext) {
       }));
 
       const selected = await vscode.window.showQuickPick(items, {
-        title: 'AIMD 상속 체인',
-        placeHolder: '파일을 선택하면 열립니다',
+        title: 'AIMD Inherits Chain',
+        placeHolder: 'Select a file to open',
       });
 
       if (selected) {
@@ -294,7 +293,7 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  vscode.window.showInformationMessage('AIMD 확장이 활성화됐습니다.');
+  vscode.window.showInformationMessage('AIMD extension activated.');
   context.subscriptions.push(output);
 }
 

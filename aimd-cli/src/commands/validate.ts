@@ -7,13 +7,13 @@ export function validateCommand(filePath: string) {
   const issues = validateAimdFile(resolved);
 
   if (issues.length === 0) {
-    console.log(chalk.green(`✓ 유효함: ${resolved}`));
+    console.log(chalk.green(`✓ Valid: ${resolved}`));
     return;
   }
 
   const errorCount = issues.filter(i => i.severity === 'error').length;
   const warningCount = issues.filter(i => i.severity === 'warning').length;
-  console.log(chalk.yellow(`검사 결과: error ${errorCount}, warning ${warningCount}`));
+  console.log(chalk.yellow(`Validation result: ${errorCount} error(s), ${warningCount} warning(s)`));
 
   for (const issue of issues) {
     const color = issue.severity === 'error' ? chalk.red : chalk.yellow;

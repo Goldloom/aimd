@@ -2,7 +2,7 @@
   "publisher": "aimd",
   "name": "aimd-vscode",
   "displayName": "AIMD - AI-Enhanced Markdown",
-  "description": "AIMD 형식 지원: 문법 강조, 토큰 카운터, 정규화, 검증, ACP 추출, :::ai 블록 토글",
+  "description": "AIMD v1.4 support: syntax highlighting, token counter, normalize, validate, ACP extraction, :::state block toggle",
   "version": "0.1.0",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Programming Languages", "Other"],
@@ -31,43 +31,43 @@
     ],
     "commands": [
       {
-        "command": "aimd.toggleAiBlock",
-        "title": "AIMD: :::ai 블록 표시/숨김 토글",
+        "command": "aimd.toggleStateBlock",
+        "title": "AIMD: Toggle :::state block visibility",
         "key": "ctrl+shift+a"
       },
       {
         "command": "aimd.extractForAi",
-        "title": "AIMD: AI용 컨텍스트 클립보드 복사",
+        "title": "AIMD: Copy AI context to clipboard",
         "key": "ctrl+shift+e"
       },
       {
         "command": "aimd.convertToAimd",
-        "title": "AIMD: .md → .aimd 변환"
+        "title": "AIMD: Convert .md to .aimd"
       },
       {
         "command": "aimd.generateFromPrompt",
-        "title": "AIMD: prompt → .aimd 생성"
+        "title": "AIMD: Generate .aimd from prompt"
       },
       {
         "command": "aimd.normalizeAimd",
-        "title": "AIMD: .aimd 정규화"
+        "title": "AIMD: Normalize .aimd"
       },
       {
         "command": "aimd.validateAimd",
-        "title": "AIMD: .aimd 검증"
+        "title": "AIMD: Validate .aimd"
       },
       {
         "command": "aimd.extractAcp",
-        "title": "AIMD: 역할별 ACP 추출"
+        "title": "AIMD: Extract ACP by role"
       },
       {
         "command": "aimd.showInheritsChain",
-        "title": "AIMD: 상속 체인 보기"
+        "title": "AIMD: Show inherits chain"
       }
     ],
     "keybindings": [
       {
-        "command": "aimd.toggleAiBlock",
+        "command": "aimd.toggleStateBlock",
         "key": "ctrl+shift+a",
         "when": "editorLangId == aimd"
       },
@@ -84,19 +84,19 @@
           "type": "string",
           "default": "cl100k_base",
           "enum": ["cl100k_base", "o200k_base"],
-          "description": "토큰 카운터 기준 모델"
+          "description": "Token counter baseline model"
         },
         "aimd.showTokenCountInStatusBar": {
           "type": "boolean",
           "default": true,
-          "description": "상태바에 토큰 수 표시"
+          "description": "Show token count in status bar"
         },
-        "aimd.aiBlockOpacity": {
+        "aimd.stateBlockOpacity": {
           "type": "number",
           "default": 0.4,
           "minimum": 0,
           "maximum": 1,
-          "description": "숨김 상태의 :::ai 블록 투명도"
+          "description": "Opacity of :::state blocks when dimmed"
         }
       }
     }

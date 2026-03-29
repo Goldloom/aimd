@@ -6,7 +6,7 @@ import { buildForAi, buildForHuman } from '../parser.js';
 export function buildCommand(filePath: string, options: { forAi?: boolean; forHuman?: boolean; out?: string }) {
   const resolved = path.resolve(filePath);
   if (!fs.existsSync(resolved)) {
-    console.error(chalk.red(`파일 없음: ${resolved}`));
+    console.error(chalk.red(`File not found: ${resolved}`));
     process.exit(1);
   }
 
@@ -15,7 +15,7 @@ export function buildCommand(filePath: string, options: { forAi?: boolean; forHu
 
   if (options.out) {
     fs.writeFileSync(path.resolve(options.out), result, 'utf-8');
-    console.log(chalk.green(`✓ 저장: ${options.out}`));
+    console.log(chalk.green(`✓ Saved: ${options.out}`));
   } else {
     console.log(result);
   }

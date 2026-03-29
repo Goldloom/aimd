@@ -27,15 +27,16 @@ const DEFAULT_BASE_URL = 'https://api.openai.com/v1';
 const DEFAULT_MODEL = 'gpt-4.1-mini';
 
 const SYSTEM_PROMPT = [
-  'You generate AIMD documents.',
+  'You generate AIMD v1.4 documents.',
   'Return AIMD only. Do not wrap the output in Markdown code fences.',
   'Preserve source facts. Do not invent exact API paths, numeric values, or field names unless the source states them.',
-  'If you infer a flow, schema, test, or rule from weak evidence, mark it with ASSUMPTION or OPEN in :::ai.',
-  'If a constraint is explicit and critical, place it in CRITICAL[n].',
-  'Emit valid AIMD with front matter and ::: blocks.',
-  'Use aimd: "1.3" in front matter.',
-  'Prefer these blocks when justified: :::intent, :::flow, :::api, :::schema, :::rules, :::test, :::ai.',
-  'Do not include :::human unless the source explicitly contains human-only notes.',
+  'Use aimd: "1.4" in front matter.',
+  'Required core blocks in order: :::intent, :::rules, :::state, :::flow.',
+  'Optional blocks when justified: :::schema, :::api, :::test, :::ref, :::diff.',
+  'Use :::state for agent-facing context: verified facts, assumptions, open questions, next agent.',
+  'In :::state, use line-id prefixes: v (verified), o (open), a (assumption), n (note), ask (question).',
+  'Do not include :::human unless the source explicitly requires human-reviewer explanation.',
+  'Never use :::human to preserve or mirror source content — it is only for reviewer clarity.',
   'Output must be directly saveable as a .aimd file.',
 ].join(' ');
 
@@ -151,7 +152,7 @@ function buildGenerationPrompt(
     '',
     'Produce a better AIMD document than the rule-based draft.',
     'Keep explicit facts from the source.',
-    'If information is missing, mark uncertainty in :::ai instead of inventing details.',
+    'If information is missing, mark uncertainty in :::state instead of inventing details.',
   ].join('\n');
 }
 

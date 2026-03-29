@@ -12,7 +12,7 @@ export function tokensCommand(filePath: string, options: { forAi?: boolean }) {
     process.exit(1);
   }
 
-  const enc = getEncoding('cl100k_base'); // gpt-4o 기준
+  const enc = getEncoding('cl100k_base'); // gpt-4o baseline
   const count = (text: string) => enc.encode(text).length;
 
   const parsed = parseFile(resolved);
@@ -21,18 +21,17 @@ export function tokensCommand(filePath: string, options: { forAi?: boolean }) {
   const content = options.forAi ? buildForAi(resolved) : fs.readFileSync(resolved, 'utf-8');
   const total = count(content);
 
-  console.log(chalk.bold(`\n토큰 분석: ${path.basename(filePath)}\n`));
+  console.log(chalk.bold(`\nToken analysis: ${path.basename(filePath)}\n`));
   console.log(chalk.gray('─'.repeat(50)));
 
-  // 블록별 분석
   for (const block of blocks) {
     const target = BLOCK_TARGET[block.type as keyof typeof BLOCK_TARGET] ?? 'shared';
     const tokens = count(block.raw);
-    const label = target === 'ai' ? chalk.blue(`:::${block.type}`) :
+    const label = target === 'state' ? chalk.blue(`:::${block.type}`) :
                   target === 'human' ? chalk.gray(`:::${block.type}`) :
                   chalk.green(`:::${block.type}`);
     const name = block.attrs ? ` ${block.attrs}` : '';
-    const skip = (options.forAi && target === 'human') ? chalk.gray(' (스킵)') : '';
+    const skip = (options.forAi && target === 'human') ? chalk.gray(' (skipped)') : '';
     console.log(`${label}${name}${skip}  ${chalk.yellow(tokens + ' tok')}`);
   }
 
@@ -44,12 +43,12 @@ export function tokensCommand(filePath: string, options: { forAi?: boolean }) {
 
   if (options.forAi) {
     const humanTokens = count(blocks.filter(b => BLOCK_TARGET[b.type as keyof typeof BLOCK_TARGET] === 'human').map(b => b.raw).join(''));
-    console.log(chalk.bold(`총합 (AI용): ${chalk.yellow(total + ' tok')}`));
+    console.log(chalk.bold(`Total (AI view): ${chalk.yellow(total + ' tok')}`));
     if (humanTokens > 0) {
-      console.log(chalk.gray(`  :::human 블록 제외: ${humanTokens} tok 절감`));
+      console.log(chalk.gray(`  :::human blocks excluded: saved ${humanTokens} tok`));
     }
   } else {
-    console.log(chalk.bold(`총합: ${chalk.yellow(total + ' tok')}`));
+    console.log(chalk.bold(`Total: ${chalk.yellow(total + ' tok')}`));
   }
   console.log('');
 

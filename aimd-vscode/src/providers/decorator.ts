@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { parseContent, resolveInherits } from '../parser';
 
-// :::ai 블록 숨김 데코레이터
+// Dim decorator for :::state blocks when toggled
 const hiddenDecoration = vscode.window.createTextEditorDecorationType({
   opacity: '0.3',
 });
 
-// 상속된 지시자 표시 데코레이터
+// Inherited context marker decorator
 const inheritedDecoration = vscode.window.createTextEditorDecorationType({
   after: {
     contentText: ' ↑ inherited',
@@ -16,13 +16,13 @@ const inheritedDecoration = vscode.window.createTextEditorDecorationType({
   },
 });
 
-let aiBlocksHidden = false;
+let stateBlocksHidden = false;
 
-export function toggleAiBlocks(editor: vscode.TextEditor) {
-  aiBlocksHidden = !aiBlocksHidden;
+export function toggleStateBlocks(editor: vscode.TextEditor) {
+  stateBlocksHidden = !stateBlocksHidden;
   updateDecorations(editor);
   vscode.window.showInformationMessage(
-    aiBlocksHidden ? 'AIMD: :::ai 블록 숨김' : 'AIMD: :::ai 블록 표시'
+    stateBlocksHidden ? 'AIMD: :::state blocks dimmed' : 'AIMD: :::state blocks visible'
   );
 }
 
@@ -32,25 +32,24 @@ export function updateDecorations(editor: vscode.TextEditor) {
 
   const parsed = parseContent(doc.getText());
   const config = vscode.workspace.getConfiguration('aimd');
-  const opacity = config.get<number>('aiBlockOpacity', 0.3);
+  const opacity = config.get<number>('stateBlockOpacity', 0.3);
 
-  // :::ai 블록 범위 계산
-  const aiRanges: vscode.Range[] = [];
+  // Compute ranges for :::state blocks
+  const stateRanges: vscode.Range[] = [];
 
-  if (aiBlocksHidden) {
+  if (stateBlocksHidden) {
     for (const block of parsed.blocks) {
-      if (block.type !== 'ai') continue;
-      // front matter 오프셋 계산
+      if (block.type !== 'state') continue;
       const fmLines = getFrontMatterLines(doc.getText());
       const start = new vscode.Position(block.startLine + fmLines, 0);
       const end = new vscode.Position(block.endLine + fmLines, 3);
-      aiRanges.push(new vscode.Range(start, end));
+      stateRanges.push(new vscode.Range(start, end));
     }
   }
 
-  editor.setDecorations(hiddenDecoration, aiRanges);
+  editor.setDecorations(hiddenDecoration, stateRanges);
 
-  // 상속된 지시자 표시
+  // Show inherited context markers
   showInheritedMarkers(editor, parsed);
 }
 
@@ -59,20 +58,18 @@ function showInheritedMarkers(editor: vscode.TextEditor, parsed: ReturnType<type
   const inheritedRanges: vscode.Range[] = [];
 
   try {
-    const { aiBlocks } = resolveInherits(filePath);
-    if (aiBlocks.length === 0) return;
+    const { stateBlocks } = resolveInherits(filePath);
+    if (stateBlocks.length === 0) return;
 
-    // front matter 라인 수
     const fmLines = getFrontMatterLines(editor.document.getText());
 
-    // 파일 상단에 "N개 규칙 상속됨" 표시
     const firstLine = new vscode.Range(
       new vscode.Position(fmLines, 0),
       new vscode.Position(fmLines, 0)
     );
     inheritedRanges.push(firstLine);
   } catch {
-    // 상속 파일 없으면 무시
+    // no inherited file — ignore
   }
 
   editor.setDecorations(inheritedDecoration, inheritedRanges);

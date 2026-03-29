@@ -6,7 +6,7 @@ import { generateAimdFromMarkdown } from '../parser.js';
 export function convertCommand(filePath: string, options: { out?: string }) {
   const resolved = path.resolve(filePath);
   if (!fs.existsSync(resolved)) {
-    console.error(chalk.red(`파일 없음: ${resolved}`));
+    console.error(chalk.red(`File not found: ${resolved}`));
     process.exit(1);
   }
 
@@ -15,6 +15,6 @@ export function convertCommand(filePath: string, options: { out?: string }) {
 
   const outPath = options.out ?? resolved.replace(/\.md$/, '.aimd');
   fs.writeFileSync(outPath, converted, 'utf-8');
-  console.log(chalk.green(`✓ 변환 완료: ${outPath}`));
-  console.log(chalk.gray('  수동 검토 권장: 테이블 → :::schema, API 문서 → :::api'));
+  console.log(chalk.green(`✓ Converted: ${outPath}`));
+  console.log(chalk.gray('  Manual review recommended: tables → :::schema, API docs → :::api'));
 }

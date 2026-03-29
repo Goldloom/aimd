@@ -73,16 +73,16 @@ interface MarkdownTable {
 }
 
 const BLOCK_RE = /^:::(\S+)([^\n]*)\n([\s\S]*?)^:::/gm;
-const AI_ONLY_BLOCKS = new Set(['ai']);
+const STATE_ONLY_BLOCKS = new Set(['state']);
 const HUMAN_ONLY_BLOCKS = new Set(['human']);
 
 const ROLE_BLOCKS: Record<AcpRole, Set<string>> = {
-  general: new Set(['intent', 'flow', 'api', 'schema', 'rules', 'deps', 'test', 'diff', 'abbr']),
-  frontend: new Set(['intent', 'flow', 'api', 'rules', 'test', 'diff', 'abbr']),
-  backend: new Set(['intent', 'flow', 'api', 'schema', 'rules', 'deps', 'test', 'diff', 'abbr']),
-  data: new Set(['intent', 'flow', 'schema', 'rules', 'deps', 'diff', 'abbr']),
-  qa: new Set(['intent', 'flow', 'api', 'schema', 'rules', 'test', 'diff', 'abbr']),
-  review: new Set(['intent', 'flow', 'api', 'schema', 'rules', 'deps', 'test', 'diff', 'abbr']),
+  general: new Set(['intent', 'flow', 'api', 'schema', 'rules', 'test', 'diff', 'ref']),
+  frontend: new Set(['intent', 'flow', 'api', 'rules', 'test', 'diff']),
+  backend: new Set(['intent', 'flow', 'api', 'schema', 'rules', 'test', 'diff', 'ref']),
+  data: new Set(['intent', 'flow', 'schema', 'rules', 'diff', 'ref']),
+  qa: new Set(['intent', 'flow', 'api', 'schema', 'rules', 'test', 'diff']),
+  review: new Set(['intent', 'flow', 'api', 'schema', 'rules', 'test', 'diff', 'ref']),
 };
 
 const FLOW_SECTION_RE = /(flow|workflow|process|sequence|procedure|steps|timeline|흐름|절차|단계|시나리오)/i;
@@ -138,22 +138,21 @@ export function parseAbbr(blocks: AimdBlock[]): Record<string, string> {
 export function resolveInherits(
   filePath: string,
   visited = new Set<string>()
-): { aiBlocks: AimdBlock[]; rulesBlocks: AimdBlock[]; abbrBlocks: AimdBlock[] } {
+): { stateBlocks: AimdBlock[]; rulesBlocks: AimdBlock[] } {
   const resolved = path.resolve(filePath);
   if (visited.has(resolved) || !fs.existsSync(resolved)) {
-    return { aiBlocks: [], rulesBlocks: [], abbrBlocks: [] };
+    return { stateBlocks: [], rulesBlocks: [] };
   }
   visited.add(resolved);
 
   const parsed = parseFile(filePath);
   const { frontMatter, blocks } = parsed;
 
-  let aiBlocks = blocks.filter(block => block.type === 'ai');
+  let stateBlocks = blocks.filter(block => block.type === 'state');
   let rulesBlocks = blocks.filter(block => block.type === 'rules');
-  let abbrBlocks = blocks.filter(block => block.type === 'abbr');
 
   const inherits = frontMatter.inherits;
-  if (!inherits) return { aiBlocks, rulesBlocks, abbrBlocks };
+  if (!inherits) return { stateBlocks, rulesBlocks };
 
   const inheritList = Array.isArray(inherits) ? inherits : [inherits];
   const dir = path.dirname(filePath);
@@ -161,36 +160,32 @@ export function resolveInherits(
   for (const rel of inheritList) {
     const parentPath = path.resolve(dir, rel);
     const parent = resolveInherits(parentPath, visited);
-    aiBlocks = [...parent.aiBlocks, ...aiBlocks];
+    stateBlocks = [...parent.stateBlocks, ...stateBlocks];
     rulesBlocks = [...parent.rulesBlocks, ...rulesBlocks];
-    abbrBlocks = [...parent.abbrBlocks, ...abbrBlocks];
   }
 
-  return { aiBlocks, rulesBlocks, abbrBlocks };
+  return { stateBlocks, rulesBlocks };
 }
 
 export function buildForAi(filePath: string): string {
   const parsed = parseFile(filePath);
   const { blocks, prose } = parsed;
-  const { aiBlocks: inheritedAi, rulesBlocks: inheritedRules, abbrBlocks: inheritedAbbr } =
+  const { stateBlocks: inheritedState, rulesBlocks: inheritedRules } =
     resolveInherits(filePath);
 
-  const ownAi = blocks.filter(block => block.type === 'ai');
+  const ownState = blocks.filter(block => block.type === 'state');
   const ownRules = blocks.filter(block => block.type === 'rules');
-  const ownAbbr = blocks.filter(block => block.type === 'abbr');
-  const shared = blocks.filter(block => !AI_ONLY_BLOCKS.has(block.type) && !HUMAN_ONLY_BLOCKS.has(block.type));
+  const shared = blocks.filter(block => !STATE_ONLY_BLOCKS.has(block.type) && !HUMAN_ONLY_BLOCKS.has(block.type));
 
-  const mergedAi = dedupeBlocks([...inheritedAi, ...ownAi]);
+  const mergedState = dedupeBlocks([...inheritedState, ...ownState]);
   const mergedRules = dedupeBlocks([...inheritedRules, ...ownRules]);
-  const mergedAbbr = dedupeBlocks([...inheritedAbbr, ...ownAbbr]);
 
   const parts: string[] = [];
-  if (mergedAi.length > 0) {
-    parts.push('<!-- AI CONTEXT (inherited + own) -->');
-    for (const block of mergedAi) parts.push(`:::ai ${block.attrs}\n${block.content}\n:::`);
+  if (mergedState.length > 0) {
+    parts.push('<!-- STATE CONTEXT (inherited + own) -->');
+    for (const block of mergedState) parts.push(`:::state ${block.attrs}\n${block.content}\n:::`);
   }
   for (const block of mergedRules) parts.push(`:::rules ${block.attrs}\n${block.content}\n:::`);
-  for (const block of mergedAbbr) parts.push(`:::abbr\n${block.content}\n:::`);
   for (const block of shared) parts.push(`:::${block.type} ${block.attrs}\n${block.content}\n:::`);
   if (prose) parts.push(prose);
   return parts.join('\n\n');
@@ -202,24 +197,21 @@ export function buildForAcp(filePath: string, role: AcpRole = 'general'): string
   const projectName = frontMatter.project?.toString() || path.basename(filePath, '.aimd');
   const roleSet = ROLE_BLOCKS[role];
 
-  const { aiBlocks: inheritedAi, rulesBlocks: inheritedRules, abbrBlocks: inheritedAbbr } =
+  const { stateBlocks: inheritedState, rulesBlocks: inheritedRules } =
     resolveInherits(filePath);
 
-  const ownAi = blocks.filter(block => block.type === 'ai');
+  const ownState = blocks.filter(block => block.type === 'state');
   const ownRules = blocks.filter(block => block.type === 'rules');
-  const ownAbbr = blocks.filter(block => block.type === 'abbr');
-  const mergedAi = dedupeBlocks([...inheritedAi, ...ownAi]);
+  const mergedState = dedupeBlocks([...inheritedState, ...ownState]);
   const mergedRules = dedupeBlocks([...inheritedRules, ...ownRules]);
-  const mergedAbbr = dedupeBlocks([...inheritedAbbr, ...ownAbbr]);
 
   const shared = blocks.filter(block => roleSet.has(block.type));
   const parts: string[] = [':::summary', (firstParagraph(prose) || `${projectName} ${role} ACP`).trim(), ':::'];
 
-  for (const block of mergedAi) parts.push(`:::ai role:${role}\n${block.content}\n:::`);
+  for (const block of mergedState) parts.push(`:::state role:${role}\n${block.content}\n:::`);
   for (const block of mergedRules) if (roleSet.has('rules')) parts.push(`:::rules ${block.attrs}\n${block.content}\n:::`);
-  for (const block of mergedAbbr) if (roleSet.has('abbr')) parts.push(`:::abbr\n${block.content}\n:::`);
   for (const block of shared) {
-    if (block.type === 'rules' || block.type === 'abbr' || block.type === 'human' || block.type === 'ai') continue;
+    if (block.type === 'rules' || block.type === 'state' || block.type === 'human') continue;
     parts.push(`:::${block.type} ${block.attrs}\n${block.content}\n:::`);
   }
 
@@ -240,7 +232,7 @@ export function generateAimdFromMarkdown(content: string, filename: string): str
   return renderGeneratedAimd(
     analysis,
     {
-      aimd: '1.3',
+      aimd: '1.4',
       project: projectName,
       source: 'markdown',
       generatedBy: 'rule-based-generator',
@@ -260,7 +252,7 @@ export function generateAimdFromPrompt(promptText: string, title?: string): stri
   return renderGeneratedAimd(
     analysis,
     {
-      aimd: '1.3',
+      aimd: '1.4',
       project: projectName,
       source: 'prompt',
       generatedBy: 'rule-based-generator',
@@ -289,19 +281,19 @@ export function normalizeAimdContent(raw: string, filename: string): string {
   const prefixes: string[] = [];
 
   if (!existingTypes.has('intent')) prefixes.push(renderIntentBlock(analysis));
+  if (!existingTypes.has('rules') && analysis.ruleItems.length > 0) prefixes.push(renderRulesBlock(analysis));
+  if (!existingTypes.has('state')) prefixes.push(renderStateBlock(analysis, 'normalized'));
   if (!existingTypes.has('flow') && analysis.flowSteps.length > 0) prefixes.push(renderFlowBlock(analysis));
   if (!existingTypes.has('api') && analysis.apiEntries.length > 0) prefixes.push(renderApiBlock(analysis));
   if (!existingTypes.has('schema')) {
     for (const candidate of analysis.schemaCandidates) prefixes.push(renderSchemaBlock(candidate));
   }
-  if (!existingTypes.has('rules') && analysis.ruleItems.length > 0) prefixes.push(renderRulesBlock(analysis));
   if (!existingTypes.has('test') && analysis.testItems.length > 0) prefixes.push(renderTestBlock(analysis));
-  if (!existingTypes.has('ai')) prefixes.push(renderAiBlock(analysis, 'normalized'));
 
   const normalizedBody = [prefixes.join('\n\n'), content.trim()].filter(Boolean).join('\n\n').trim();
   return matter.stringify(normalizedBody + '\n', {
     ...frontMatter,
-    aimd: '1.3',
+    aimd: '1.4',
     project: projectName,
     source: frontMatter.source ?? 'normalized',
     generatedBy: frontMatter.generatedBy ?? 'rule-based-generator',
@@ -427,7 +419,7 @@ function renderGeneratedAimd(
   if (analysis.flowSteps.length > 0) parts.push(renderFlowBlock(analysis));
   if (analysis.ruleItems.length > 0) parts.push(renderRulesBlock(analysis));
   if (analysis.testItems.length > 0) parts.push(renderTestBlock(analysis));
-  parts.push(renderAiBlock(analysis, String(frontMatterData.source ?? 'unknown')));
+  parts.push(renderStateBlock(analysis, String(frontMatterData.source ?? 'unknown')));
 
   if (source?.sourceText?.trim()) {
     parts.push(`## ${source.sourceLabel}\n\n${source.sourceText.trim()}`);
@@ -470,16 +462,17 @@ function renderTestBlock(analysis: GenerationAnalysis): string {
   return [':::test ' + analysis.slug, ...analysis.testItems.map(item => `✓ ${item}`), ':::'].join('\n');
 }
 
-function renderAiBlock(analysis: GenerationAnalysis, sourceKind: string): string {
-  const lines = [':::ai', `CTX: generated from ${sourceKind} input using the rule-based AIMD generator.`];
-  analysis.verifiedItems.forEach(item => lines.push(`VERIFIED: ${item}`));
-  analysis.criticalItems.forEach((item, index) => lines.push(`CRITICAL[${index + 1}]: ${item}`));
-  analysis.assumptions.forEach(item => lines.push(`ASSUMPTION: ${item}`));
-  analysis.openItems.forEach(item => lines.push(`OPEN: ${item}`));
-  if (analysis.criticalItems.length === 0) {
-    lines.push('OPEN: Confirm which constraints are truly critical before downstream ACP extraction.');
+function renderStateBlock(analysis: GenerationAnalysis, sourceKind: string): string {
+  let idx = 1;
+  const lines = [':::state', `n1: generated_from=${sourceKind}_input_via_rule_based_generator`];
+  analysis.verifiedItems.forEach(item => lines.push(`v${idx++}: ${item.replace(/\s+/g, '_').toLowerCase()}`));
+  let oIdx = 1;
+  analysis.assumptions.forEach(item => lines.push(`a${oIdx++}: ${item.replace(/\s+/g, '_').toLowerCase()}`));
+  let openIdx = 1;
+  analysis.openItems.forEach(item => lines.push(`o${openIdx++}: ${item.replace(/\s+/g, '_').toLowerCase()}`));
+  if (analysis.openItems.length === 0) {
+    lines.push('o1: confirm_which_constraints_are_critical_before_acp_extraction');
   }
-  lines.push('NEXT: architect_agent');
   lines.push(':::');
   return lines.join('\n');
 }
@@ -1111,15 +1104,15 @@ function scanFenceIssues(content: string): ValidationIssue[] {
 function scanDirectiveIssues(blocks: AimdBlock[]): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   for (const block of blocks) {
-    if (block.type !== 'ai') continue;
+    if (block.type !== 'state') continue;
     for (const line of block.content.split('\n')) {
       const trimmed = line.trim();
       if (!trimmed) continue;
-      if (/^(VERIFIED|OPEN|CRITICAL(?:\[\d+\])?|FREEZE|NEXT|ASSUMPTION|ASK):\s*$/.test(trimmed)) {
+      if (/^(v|o|a|n|ask)\d+:\s*$/.test(trimmed)) {
         issues.push({
           severity: 'warning',
-          code: 'ai.empty_directive',
-          message: `Empty :::ai directive: ${trimmed}`,
+          code: 'state.empty_line',
+          message: `Empty :::state line: ${trimmed}`,
         });
       }
     }

@@ -1,23 +1,31 @@
 import * as vscode from 'vscode';
-import { parseContent, parseAbbr } from '../parser';
+import { parseContent } from '../parser';
 
 export class AimdHoverProvider implements vscode.HoverProvider {
   provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover | null {
-    const parsed = parseContent(document.getText());
-    const abbrMap = parseAbbr(parsed.blocks);
+    const lineText = document.lineAt(position).text;
 
-    if (Object.keys(abbrMap).length === 0) return null;
+    // Hover on block opener lines (:::blocktype)
+    const blockMatch = lineText.match(/^:::(intent|rules|state|flow|schema|api|test|ref|diff|human)(\s|$)/);
+    if (blockMatch) {
+      const blockType = blockMatch[1];
+      const descriptions: Record<string, string> = {
+        intent: 'Goals, success criteria, constraints, and exclusions for this context.',
+        rules: 'Hard constraints (r), bans (ban), and frozen decisions (fz).',
+        state: 'Agent-facing context: verified facts (v), open questions (o), assumptions (a), notes (n), questions (ask).',
+        flow: 'Ordered execution steps (s).',
+        schema: 'Data structure definition with typed fields and annotations.',
+        api: 'API endpoint signatures, auth, params, responses.',
+        test: 'Acceptance criteria and QA scenarios.',
+        ref: 'Pointers to external resources, commits, or related files.',
+        diff: 'Change summary between versions.',
+        human: 'Human reviewer note — not read by agents.',
+      };
+      const md = new vscode.MarkdownString();
+      md.appendMarkdown(`**:::${blockType}** — ${descriptions[blockType] ?? 'AIMD block'}`);
+      return new vscode.Hover(md);
+    }
 
-    const wordRange = document.getWordRangeAtPosition(position, /[A-Z][A-Z0-9/]+/);
-    if (!wordRange) return null;
-
-    const word = document.getText(wordRange);
-    const full = abbrMap[word];
-    if (!full) return null;
-
-    const md = new vscode.MarkdownString();
-    md.appendMarkdown(`**${word}** = ${full}`);
-    md.appendMarkdown(`\n\n*:::abbr 정의*`);
-    return new vscode.Hover(md, wordRange);
+    return null;
   }
 }

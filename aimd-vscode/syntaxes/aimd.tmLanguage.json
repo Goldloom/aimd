@@ -4,7 +4,7 @@
   "fileTypes": ["aimd"],
   "patterns": [
     { "include": "#frontMatter" },
-    { "include": "#aiBlock" },
+    { "include": "#stateBlock" },
     { "include": "#humanBlock" },
     { "include": "#schemaBlock" },
     { "include": "#apiBlock" },
@@ -20,36 +20,36 @@
       "contentName": "source.yaml",
       "patterns": [{ "include": "source.yaml" }]
     },
-    "aiBlock": {
-      "begin": "^(:::ai)(.*)$",
+    "stateBlock": {
+      "begin": "^(:::state)(.*)$",
       "end": "^(:::)$",
-      "name": "meta.block.ai.aimd",
+      "name": "meta.block.state.aimd",
       "beginCaptures": {
-        "1": { "name": "keyword.control.block.ai.aimd" },
+        "1": { "name": "keyword.control.block.state.aimd" },
         "2": { "name": "entity.name.tag.aimd" }
       },
       "endCaptures": {
-        "1": { "name": "keyword.control.block.ai.aimd" }
+        "1": { "name": "keyword.control.block.state.aimd" }
       },
       "patterns": [
         {
-          "match": "^(CRITICAL(?:\\[\\d+\\])?|WARN|FREEZE|UNFREEZE)(:.*)",
+          "match": "^(v\\d+|n\\d+)(:.*)",
           "captures": {
-            "1": { "name": "keyword.control.directive.critical.aimd" },
+            "1": { "name": "keyword.control.directive.verified.aimd" },
             "2": { "name": "string.unquoted.aimd" }
           }
         },
         {
-          "match": "^(DO|DONT|PREFER|AVOID)(:.*)",
+          "match": "^(o\\d+|ask\\d+)(:.*)",
           "captures": {
-            "1": { "name": "keyword.control.directive.action.aimd" },
+            "1": { "name": "keyword.control.directive.open.aimd" },
             "2": { "name": "string.unquoted.aimd" }
           }
         },
         {
-          "match": "^(CTX|HIST|DEBT|PERF|SEC|SCOPE|TODO|BLOCKED|EDGE-CASE|MUST-TEST|ASK|FORMAT|LANG|STYLE|ASSUME)(:.*)",
+          "match": "^(a\\d+)(:.*)",
           "captures": {
-            "1": { "name": "keyword.control.directive.aimd" },
+            "1": { "name": "keyword.control.directive.assumption.aimd" },
             "2": { "name": "string.unquoted.aimd" }
           }
         }
@@ -124,7 +124,7 @@
       ]
     },
     "sharedBlock": {
-      "begin": "^(:::(?:flow|deps|rules|test|diff|intent|abbr))(.*)$",
+      "begin": "^(:::(?:flow|rules|test|diff|intent|ref))(.*)$",
       "end": "^(:::)$",
       "name": "meta.block.shared.aimd",
       "beginCaptures": {

@@ -1,27 +1,26 @@
 export type BlockType =
-  | 'schema' | 'api' | 'flow' | 'deps' | 'rules'
-  | 'test' | 'diff' | 'intent' | 'abbr'
-  | 'ai' | 'human';
+  | 'schema' | 'api' | 'flow' | 'rules'
+  | 'test' | 'diff' | 'intent' | 'state'
+  | 'ref' | 'human';
 
-export type BlockTarget = 'ai' | 'human' | 'shared';
+export type BlockTarget = 'state' | 'human' | 'shared';
 
 export const BLOCK_TARGET: Record<BlockType, BlockTarget> = {
   schema:  'shared',
   api:     'shared',
   flow:    'shared',
-  deps:    'shared',
   rules:   'shared',
   test:    'shared',
   diff:    'shared',
   intent:  'shared',
-  abbr:    'shared',
-  ai:      'ai',
+  ref:     'shared',
+  state:   'state',
   human:   'human',
 };
 
 export interface AimdBlock {
   type: BlockType | string;
-  attrs: string;      // 블록 타입 뒤 속성 (예: "User" in :::schema User)
+  attrs: string;      // attributes after block type (e.g., "User" in :::schema User)
   content: string;
   raw: string;
 }
@@ -37,7 +36,7 @@ export interface AimdFrontMatter {
 export interface ParsedAimd {
   frontMatter: AimdFrontMatter;
   blocks: AimdBlock[];
-  prose: string;      // 블록 외 일반 텍스트
+  prose: string;      // prose text outside blocks
   raw: string;
 }
 
