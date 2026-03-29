@@ -2,6 +2,8 @@
 
 **Canonical Semantic Memory for Multi-Agent Handoff**
 
+![Validate AIMD Examples](https://github.com/Goldloom/aimd/actions/workflows/validate-aimd.yml/badge.svg)
+
 ---
 
 ## What is AIMD?
