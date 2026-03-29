@@ -187,3 +187,7 @@ aimd/
 Current version: **v1.4** (Proposed Spec)
 
 AIMD v1.4 is a proposed specification. Implementations and feedback are welcome.
+
+---
+
+Copyright © 2026 Hwehsoo Kim (Goldloom). Licensed under the Apache License 2.0.
