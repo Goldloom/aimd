@@ -4,7 +4,7 @@
 
 **Canonical Semantic Memory for Multi-Agent Handoff**
 
-![Validate AIMD Examples](https://github.com/Goldloom/aimd/actions/workflows/validate-aimd.yml/badge.svg)
+[![AIMD Spec](https://img.shields.io/badge/AIMD-v1.4--Canonical-orange)](spec_en/AIMD-v1.4.md)
 
 ---
 
@@ -193,18 +193,16 @@ syntax validator → semantic validator → compression validator
 
 ---
 
-## Repository Structure
+## 🛠️ Core Repository Structure
 
-```
-aimd/
-├── README.md
-├── spec/
-│   ├── AIMD-v1.4.md               ← Core specification (English)
-│   ├── AIMD-v1.4-ko.md            ← Core specification (Korean)
-│   ├── generator-spec.md           ← Generator specification (English)
-│   ├── generator-spec-ko.md        ← Generator specification (Korean)
-│   ├── generator-prompt.md         ← Generator system prompt draft (English)
-│   └── generator-prompt-ko.md      ← Generator system prompt draft (Korean)
+- [`spec_en/`](spec_en/): English Core Specifications & Guidelines
+  - [`AIMD-v1.4.md`](spec_en/AIMD-v1.4.md): AIMD Core Grammar & Block Standards.
+  - [`generator-spec.md`](spec_en/generator-spec.md): Specification for AI model generator engines.
+  - [`generator-prompt.md`](spec_en/generator-prompt.md): Master prompts for standard AIMD generation.
+- [`spec_ko/`](spec_ko/): Korean Core Specifications & Guidelines
+  - [`AIMD-v1.4-ko.md`](spec_ko/AIMD-v1.4-ko.md): Korean translation of Core Grammar.
+  - [`generator-spec-ko.md`](spec_ko/generator-spec-ko.md): Korean translation of Generator Spec.
+  - [`generator-prompt-ko.md`](spec_ko/generator-prompt-ko.md): Korean translation of Master Prompts.
 ├── validators/
 │   ├── syntax-validator.md
 │   ├── semantic-validator.md
@@ -239,8 +237,8 @@ AIMD v1.4 is a proposed specification. Implementations and feedback are welcome.
 ### 2. 슬래시 명령어 활성화 (`.agents/workflows/aimd.md`)
 Antigravity와 같은 도구에서 `/aimd` 명령어를 통해 언제든지 규격 요약과 지침을 불러올 수 있습니다.
 
-### 3. 상세 사양 참조 (`spec/` 폴더)
-AI가 규격에 대해 더 깊은 이해가 필요할 때 `spec/` 폴더 내의 명세서들을 참고하도록 지시하십시오.
+### 3. Detailed Reference (`spec_en/` folder)
+Invite the AI to learn deep specification details by referencing documents in the `spec_en/` folder.
 
 ---
 

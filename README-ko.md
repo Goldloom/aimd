@@ -7,7 +7,7 @@ AIMD는 AI 에이전트 간의 **무손실 의도 전달(Lossless Intent Handoff
 이 사양은 인간의 가독성을 유지하면서 동시에 AI 모델이 최저의 토큰 비용으로 최상의 논리적 일관성을 유지할 수 있도록 최적화되었습니다.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![AIMD Spec](https://img.shields.io/badge/AIMD-v1.4--Canonical-orange)](spec/AIMD-v1.4.md)
+[![AIMD Spec](https://img.shields.io/badge/AIMD-v1.4--Canonical-orange)](spec_ko/AIMD-v1.4-ko.md)
 
 ---
 
@@ -24,10 +24,13 @@ AIMD는 AI 에이전트 간의 **무손실 의도 전달(Lossless Intent Handoff
 
 ## 🛠️ 핵심 저장소 구조
 
-*   [`spec/`](spec/): 핵심 사양 및 가이드라인
-    *   [`AIMD-v1.4.md`](spec/AIMD-v1.4.md) / [한국어](spec/AIMD-v1.4-ko.md): AIMD 코어 문법 및 블록 규격.
-    *   [`generator-spec.md`](spec/generator-spec.md) / [한국어](spec/generator-spec-ko.md): AI 모델이 AIMD를 생성하기 위한 엔진 사양.
-    *   [`generator-prompt.md`](spec/generator-prompt.md) / [한국어](spec/generator-prompt-ko.md): 실전용 시스템 프롬프트 및 마스터 가이드.
+*   [`spec_en/`](spec_en/): 영문 핵심 사양 및 가이드라인
+    *   [`AIMD-v1.4.md`](spec_en/AIMD-v1.4.md): AIMD 코어 문법 및 블록 규격.
+    *   [`generator-spec.md`](spec_en/generator-spec.md): AI 모델 생성기 엔진 사양.
+*   [`spec_ko/`](spec_ko/): 한글 핵심 사양 및 가이드라인
+    *   [`AIMD-v1.4-ko.md`](spec_ko/AIMD-v1.4-ko.md): AIMD 코어 문법 및 블록 규격.
+    *   [`generator-spec-ko.md`](spec_ko/generator-spec-ko.md): AI 모델 생성기 엔진 사양.
+    *   [`generator-prompt-ko.md`](spec_ko/generator-prompt-ko.md): 한국어 마스터 프롬프트 및 가이드.
 *   [`README.md`](README.md) / [한국어](README-ko.md): 프로젝트 메인 가이드.
 *   [`.cursorrules`](.cursorrules): AI용 워크스페이스 전역 규칙 파일.
 *   [`.agents/workflows/aimd.md`](.agents/workflows/aimd.md): Antigravity 등을 위한 슬래시 명령어 워크플로우.
@@ -55,8 +58,8 @@ AIMD v1.4는 문서를 네 가지 핵심 앵커(Anchors)로 구조화합니다:
 ### 2단계: 슬래시 명령어 활성화 (`.agents/workflows/aimd.md`)
 Antigravity와 같은 도구에서 `/aimd` 명령어를 통해 언제든지 규격 요약과 지침을 불러올 수 있습니다.
 
-### 3단계: 상세 사양 참조 (`spec/` 폴더)
-AI가 특정 문법이나 접두사(Prefix) 규칙이 궁금할 때 `spec/` 폴더의 명세서를 참고하도록 하십시오.
+### 3단계: 상세 사양 참조 (`spec_ko/` 폴더)
+AI가 특정 문법이나 접두사(Prefix) 규칙이 궁금할 때 `spec_ko/` 폴더 내의 명세서들을 참고하도록 하십시오.
 
 ---
 
