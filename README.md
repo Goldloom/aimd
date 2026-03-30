@@ -119,6 +119,16 @@ Refer to the following documents to learn how to maximize productivity by starti
 *   **[New Project Template (bootstrap-en.aimd)](examples/bootstrap-en.aimd)**: A standard template you can copy and use immediately.
 *   **[Unified MasterPlan Template (MASTERPLAN-en.aimd)](examples/MASTERPLAN-en.aimd)**: An advanced template that consolidates goals, rules, tasks, and insights into a single orchestration file.
 *   **[Prompt-Zero Philosophy (PHILOSOPHY-en.md)](PHILOSOPHY-en.md)**: Why and how AIMD replaces traditional prose-based prompting.
+*   **[AI Architect Review (docs/experience/)](docs/experience/260331_AI_ARCHITECT_LOG_EN.md)**: Real-world SaaS implementation and integrity validation using AIMD v1.5.
+
+---
+
+## 💡 Case Study
+
+AIMD v1.5 is more than just a theory. Its power has been proven through the construction of an enterprise-grade SaaS project (`aimd-cloud`). Check out the vivid reviews written directly by the AI agent.
+
+*   **[AI Architect Review: Value of Integrity with AIMD v1.5 (English)](docs/experience/260331_AI_ARCHITECT_LOG_EN.md)**
+*   **[AI 아키텍트의 AIMD v1.5 실사용 후기 (Korean)](docs/experience/260331_AI_ARCHITECT_LOG.md)**
 
 ---
 
