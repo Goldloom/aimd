@@ -1,7 +1,7 @@
 ---
-aimd: "1.4"
-id: masterplan-en-v1
+aimd: "1.5"
 src: masterplan_pattern
+id: masterplan-en-v1
 rev: 1
 mode: c
 ---
@@ -11,50 +11,57 @@ mode: c
 g1: [ProjectName]_AI_Native_Unified_Platform_Construction
 ok1: mvp_completion_criteria=[Specific Criterion 1]
 ok2: quality_standard=code_coverage_80%+
-in1: [List core features included in the development scope]
-out1: [List features explicitly excluded from this project]
+in1: [Development scope features]
+out1: [Explicitly excluded features]
 :::
 
 :::rules
--- [⚖️ Captain's Law: AI Action Rules and Absolute Principles] & [📐 Blueprint: Core Constraints]
+-- [⚖️ Captain's Law: AI Action Rules and Absolute Principles]
 r1: stack=[Framework]+[DB]+[ORM]
-r2: auth=[Auth Method]+[SSO Necessity]
+r2: auth=[Method] ref(ok1)
 r3: workflow=session_start(RULES)->execute(TODO)->verify->push->report
-ban1: [Actions that must never be included or permitted]
-fz1: [Fixed data structures or file paths that must not change]
+ban1: [Prohibited actions or storage types]
+fz1: [Frozen file paths or endpoint contracts]
 :::
 
 :::state
--- [🗼 Control Tower: Overall Status] & [📖 Logbook: Findings and Insights]
-v1: [Facts or tasks already verified or completed (PROGRESS)]
-o1: [Open issues or decisions yet to be made]
-a1: [Assumptions or preconditions under discussion (INSIGHTS)]
-n1: [The very first task to undertake (TODO - Next Action)]
+-- [🗼 Control Tower: Overall Status & Insights]
+v1: [Verified facts or completed milestones] @YYYY-MM-DD
+o1: [Open issues or pending decisions]
+a1: [Assumptions requiring validation (INSIGHTS)]
+n1: [Next task to undertake (TODO)] ref(v1, r1)
 ask1: [Questions requiring user confirmation]
 :::
 
 :::flow
 -- [⚙️ Engine Room: Major Milestones and Execution Order]
-s1: [First milestone (e.g., Infrastructure Setup)]
-s2: [Second milestone (e.g., Core Feature Implementation)]
-s3: [Third milestone (e.g., Optimization and Deployment)]
+s1: [Infrastructure setup]
+s2: [Core Feature Implementation] ref(s1, r1)
+s3: [Optimization and Deployment] ref(s2, r2)
 :::
 
 :::schema
 -- [📐 Blueprint: Database Schema Specification]
-[Table1](column1 PK, column2, ...)
-[Table2](column1 PK, table1_id FK->Table1.id, ...)
+[Table1](id PK, ...)
+[Table2](id PK, t1_id FK ref(Table1.id), ...)
 :::
 
 :::api
 -- [📐 Blueprint: API Interface Specification]
-POST /api/[path]: [Description]
-GET  /api/[path]: [Description]
+POST /api/[endpoint]: [Input]->[Output]
+GET  /api/[endpoint]: [Query]->[Data]
+:::
+
+:::test
+-- [🎯 Target: Declarative Verification Criteria]
+t1: v1=verified -> file(path/to/evidence.ts)
+t2: n1=completed -> route(POST /api/test)
+t3: ok1=completed -> route(GET /api/health)
+t4: ban1 -> no_table(table_name)
 :::
 
 :::human
--- [📖 Logbook: Narrative Context and Business Background for Human Stakeholders]
-Use this block to provide detailed explanations that complement the dry 
-representations in the core blocks, the project vision, or lessons to prevent 
-recurring mistakes.
+-- [📖 Logbook: Narrative Context and Business Background]
+Use this block to provide detailed explanations that complement the canonical 
+representations, the project vision, or lessons learned during execution.
 :::

@@ -1,10 +1,10 @@
-# AIMD — AI-Enhanced Markdown v1.4
+# AIMD — AI-Enhanced Markdown v1.5
 
 [한국어 버전 (Korean)](README-ko.md)
 
 **Canonical Semantic Memory for Multi-Agent Handoff**
 
-[![AIMD Spec](https://img.shields.io/badge/AIMD-v1.4--Canonical-orange)](spec/en/AIMD-v1.4.md)
+[![AIMD Spec](https://img.shields.io/badge/AIMD-v1.5--Canonical-orange)](spec/en/AIMD-v1.5.md)
 
 ---
 
@@ -70,10 +70,10 @@ Transmuting a traditional Product Requirement Document (PRD) into AIMD creates a
 
 ```markdown
 ---
-aimd: "1.4"
+aimd: "1.5"
 src: md
 id: payment-retry
-rev: 3
+rev: 4
 mode: c
 ---
 
@@ -90,16 +90,21 @@ fz1: api_error_contract
 :::
 
 :::state
-v1: retry_409_on_processed
+v1: retry_409_on_processed @2026-03-31
 o1: rollback_regression_check
-n1: qa_validate_concurrent_retry
+n1: qa_validate_concurrent_retry ref(v1, r1)
 :::
 
 :::flow
 s1: fail_payment
 s2: show_retry
-s3: validate_idempotency
+s3: validate_idempotency ref(r1)
 s4: return_existing_or_new_result
+:::
+
+:::test
+t1: v1=verified -> route(POST /api/payment/retry)
+t2: ban1 -> no_table(duplicate_charge_log)
 :::
 ```
 
@@ -127,6 +132,7 @@ Refer to the following documents to learn how to maximize productivity by starti
 | `projection handoff` | Role-specific handoff = line selection, not rewriting |
 | `stable line ids` | Line IDs are stable across revisions for delta updates |
 | `compression validated` | Token cost is a first-class quality metric |
+| `verifiable references` | Cross-references between lines MUST be checkable by a validator |
 
 ---
 
@@ -138,10 +144,11 @@ Every AIMD document must have these four blocks in order:
 |-------|---------|--------------|
 | `:::intent` | Goals and success criteria | `g`, `ok`, `in`, `out` |
 | `:::rules` | Constraints, prohibitions, freezes | `r`, `ban`, `fz` |
-| `:::state` | Verified facts, open issues, assumptions, next actions | `v`, `o`, `a`, `n`, `ask` |
-| `:::flow` | Execution steps | `s` |
+| `:::state` | Verified facts/milestones, open issues, assumptions, next actions | `v` (+ `@date`), `o`, `a`, `n`, `ask` |
+| `:::flow` | Execution steps | `s` (+ `ref()`) |
+| `:::test` | Declarative verification criteria | `t` |
 
-Optional blocks: `:::schema`, `:::api`, `:::test`, `:::ref`, `:::human`, `:::diff`
+Optional blocks: `:::schema`, `:::api`, `:::ref`, `:::human`, `:::diff`
 
 ---
 
@@ -150,11 +157,13 @@ Optional blocks: `:::schema`, `:::api`, `:::test`, `:::ref`, `:::human`, `:::dif
 Every line inside a core block follows this format:
 
 ```
-<line-id>: <payload>
+<line-id>: <payload> [ref(<id>...)] [@YYYY-MM-DD]
 ```
 
 Payload rules:
 - Prefer `key=value` or `subject->result`
+- `ref(<id>...)`: Captures cross-line dependencies (§10.4)
+- `@YYYY-MM-DD`: Non-semantic metadata for `v` lines (§10.5)
 - Keep it short and normalized
 - No free prose inside core blocks
 - One fact per line
@@ -208,11 +217,11 @@ syntax validator → semantic validator → compression validator
 ## 🛠️ Core Repository Structure
 
 - [`spec/en/`](spec/en/): English Core Specifications & Guidelines
-  - [`AIMD-v1.4.md`](spec/en/AIMD-v1.4.md): AIMD Core Grammar & Block Standards.
+  - [`AIMD-v1.5.md`](spec/en/AIMD-v1.5.md): AIMD Core Grammar & Block Standards.
   - [`generator-spec.md`](spec/en/generator-spec.md): Specification for AI model generator engines.
   - [`generator-prompt.md`](spec/en/generator-prompt.md): Master prompts for standard AIMD generation.
 - [`spec/ko/`](spec/ko/): Korean Core Specifications & Guidelines
-  - [`AIMD-v1.4-ko.md`](spec/ko/AIMD-v1.4-ko.md): Korean translation of Core Grammar.
+  - [`AIMD-v1.5-ko.md`](spec/ko/AIMD-v1.5-ko.md): Korean translation of Core Grammar.
   - [`generator-spec-ko.md`](spec/ko/generator-spec-ko.md): Korean translation of Generator Spec.
   - [`generator-prompt-ko.md`](spec/ko/generator-prompt-ko.md): Korean translation of Master Prompts.
 ├── validators/
@@ -233,18 +242,18 @@ syntax validator → semantic validator → compression validator
 
 ## Status
 
-Current version: **v1.4** (Proposed Spec)
+Current version: **v1.5** (Proposed Spec)
 
-AIMD v1.4 is a proposed specification. Implementations and feedback are welcome.
+AIMD v1.5 is a proposed specification. Implementations and feedback are welcome.
 
 ---
 
 ## 💻 AI-Native Setup Guide
 
-To apply the AIMD v1.4 specification to your own project immediately, copy these infrastructure files to your project root:
+To apply the AIMD v1.5 specification to your own project immediately, copy these infrastructure files to your project root:
 
 ### 1. Enable Global Rules (`.cursorrules`)
-Place the `.cursorrules` file in your project root. Any AI agent (Cursor, Copilot, etc.) will then automatically follow the AIMD v1.4 standard for document design.
+Place the `.cursorrules` file in your project root. Any AI agent (Cursor, Copilot, etc.) will then automatically follow the AIMD v1.5 standard for document design.
 
 ### 2. Enable Slash Commands (`.agents/workflows/aimd.md`)
 In tools like Antigravity, you can call the `/aimd` command at any time to pull up specification summaries and instructions.

@@ -1,7 +1,7 @@
 ---
-aimd: "1.4"
-id: masterplan-ko-v1
+aimd: "1.5"
 src: masterplan_pattern
+id: masterplan-ko-v1
 rev: 1
 mode: c
 ---
@@ -11,45 +11,53 @@ mode: c
 g1: [프로젝트명]을_위한_AI_네이티브_통합_플랫폼_구축
 ok1: mvp_completion_criteria=[구체적 기준 1]
 ok2: quality_standard=code_coverage_80%+
-in1: [개발 범위에 포함할 핵심 기능들을 나열]
-out1: [이번 프로젝트에서 제외할 기능들을 명시]
+in1: [개발 범위에 포함할 핵심 기능]
+out1: [이번 프로젝트에서 제외할 기능/범위]
 :::
 
 :::rules
--- [⚖️ 선장의 법전: AI 작업 규칙과 절대 원칙] & [📐 설계 도면: 핵심 제약사항]
+-- [⚖️ 선장의 법전: AI 작업 규칙과 절대 원칙]
 r1: stack=[프레임워크]+[DB]+[ORM]
-r2: auth=[인증 방식]+[SSO 여부]
+r2: auth=[인증 방식] ref(ok1)
 r3: workflow=session_start(RULES)->execute(TODO)->verify->push->report
-ban1: [절대로 작업에 포함하거나 허용해서는 안 되는 행위]
-fz1: [변경되어서는 안 될 고정된 데이터 구조나 파일 경로 패턴]
+ban1: [절대로 허용해서는 안 되는 행위/구조]
+fz1: [변경되어서는 안 될 고정된 데이터 구조나 파일 경로]
 :::
 
 :::state
--- [🗼 관제탑: 전체 현황] & [📖 항해 일지: 발견사항 및 인사이트]
-v1: [이미 검증되거나 완료된 상태 (PROGRESS)]
-o1: [아직 결정되지 않았거나 열려 있는 의사결정 사항]
+-- [🗼 관제탑: 전체 현황 및 인사이트]
+v1: [확인된 사실 또는 완료된 마일스톤] @YYYY-MM-DD
+o1: [미결정 이슈나 아직 열려 있는 의사결정 사항]
 a1: [가정한 사실이나 논의 중인 전제 조건 (INSIGHTS)]
-n1: [가장 먼저 착수해야 할 작업 (TODO - Next Action)]
+n1: [다음에 착수해야 할 작업 (TODO)] ref(v1, r1)
 ask1: [사용자에게 확인이 필요한 질문 사항]
 :::
 
 :::flow
 -- [⚙️ 엔진룸: 주요 마일스톤 및 실행 순서]
-s1: [첫 번째 마일스톤 (예: 인프라 구축)]
-s2: [두 번째 마일스톤 (예: 핵심 기능 구현)]
-s3: [세 번째 마일스톤 (예: 고도화 및 배포)]
+s1: [인프라 구축 및 초기 설정]
+s2: [핵심 기능 및 서버 로직 구현] ref(s1, r1)
+s3: [프론트엔드 연동 및 배포] ref(s2, r2)
 :::
 
 :::schema
 -- [📐 설계 도면: 데이터베이스 구조 명세]
-[테이블1](컬럼1 PK, 컬럼2, ...)
-[테이블2](컬럼1 PK, 테이블1_id FK->테이블1.id, ...)
+[테이블1](id PK, 컬럼, ...)
+[테이블2](id PK, t1_id FK ref(테이블1.id), ...)
 :::
 
 :::api
 -- [📐 설계 도면: API 인터페이스 명세]
-POST /api/[경로]: [설명]
-GET  /api/[경로]: [설명]
+POST /api/[경로]: [입력]->[출력]
+GET  /api/[경로]: [쿼리]->[데이터]
+:::
+
+:::test
+-- [🎯 타겟: 선언적 검증 기준]
+t1: v1=verified -> file(evidence/setup.log)
+t2: n1=completed -> route(POST /api/health)
+t3: ok1=completed -> env(MVP_READY)
+t4: ban1 -> no_table(forbidden_table_name)
 :::
 
 :::human

@@ -1,4 +1,4 @@
-# AIMD Philosophy: Toward Prompt-Zero Collaboration
+# AIMD Philosophy: Toward Prompt-Zero Collaboration (v1.5)
 
 ## 🌀 The Era of Liquid Memory (Legacy Prompts)
 Current interactions with AI agents rely heavily on long-form prose prompts. While intuitive, these prompts are **"liquid"**:
@@ -9,12 +9,13 @@ Current interactions with AI agents rely heavily on long-form prose prompts. Whi
 
 ---
 
-## 💎 The Era of Solid Memory (AIMD v1.4)
-AIMD (AI-native Markdown) evolves "Prompting" into **"Memory as Code."** By encapsulating intents, rules, schemas, and flows into structured, machine-readable blocks (:::), we achieve **"Solid Memory"**:
+## 💎 The Era of Verifiable Precision Memory (AIMD v1.5)
+AIMD (AI-native Markdown) evolves "Prompting" into **"Memory as Code."** By encapsulating intents, rules, schemas, and flows into structured, machine-readable blocks (:::), we achieve **"Verifiable Precision Memory"**:
 - **Persistence**: Knowledge is stored in version-controlled files, not fleeting chat history.
 - **Symbolic Precision**: Using IDs and symbols reduces semantic drift and improves AI reasoning.
 - **Zero-Redundancy**: The spec *is* the prompt. AI reads the file once and knows exactly what to do.
-- **Handoff Fidelity**: Different AI agents can pick up where the last one left off with 100% context alignment.
+- **Verifiable Integrity (v1.5)**: Using `ref()` cross-references and `@date` temporal metadata, we ensure every fact is traceable and every milestone is verifiable.
+- **Handoff Fidelity**: Different AI agents can pick up where the last one left off with 100% context alignment and zero ambiguity.
 
 ---
 
@@ -24,10 +25,10 @@ The ultimate goal of AIMD is a workflow where the human no longer "commands," bu
 Instead of:
 > "Hey AI, please build a login page using Next.js 15, and make sure the button is blue, and don't forget to use Drizzle for the DB..."
 
-In AIMD v1.4, you simply say:
-> "Read `MASTERPLAN.aimd` and execute `n1`."
+In AIMD v1.5, you simply say:
+> "Read `MASTERPLAN.aimd` and execute `v12` ref(v11)."
 
-Everything else—the technical stack, the design tokens, the database schema—is already **"Solidified"** in the `.aimd` files.
+Everything else—the technical stack, the design tokens, the database schema—is already **"Solidified"** and **"Linked"** in the `.aimd` files.
 
 ---
 
@@ -44,7 +45,16 @@ workflow: [read_master_plan, apply_rules, report_state]
 :::rules
 r1: symbolic_expression_only
 r2: no_prose_redundancy
-ban1: no_execution_without_reading_masterplan
+r3: read_masterplan_before_execution
+ban1: execute_without_verification ref(r3)
+:::
+
+:::state
+v1: masterplan_reviewed ref(r3) @2026-03-31
+:::
+
+:::test
+t1: v1=verified -> file(MASTERPLAN.aimd)
 :::
 ```
 

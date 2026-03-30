@@ -1,31 +1,32 @@
 {
-  "schema_version": "aimd.validator.output.v1.4",
+  "schema_version": "aimd.validator.output.v1.5",
   "validator": {
     "kind": "syntax",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "run_id": "syn-example-001",
-    "timestamp": "2026-03-28T12:35:00+09:00"
+    "timestamp": "2026-03-31T10:00:00+09:00"
   },
   "document": {
     "path": "examples/payment-retry.aimd",
-    "aimd_version": "1.4",
+    "aimd_version": "1.5",
     "doc_id": "payment-retry",
-    "revision": 3,
+    "revision": 4,
     "mode": "c",
-    "source_type": "md"
+    "source_type": "aimd"
   },
   "result": "pass",
   "scores": {
-    "overall": 96,
-    "structure": 96
+    "overall": 98,
+    "structure": 100,
+    "referential_integrity": 100
   },
   "issues": [],
   "summary": {
-    "message": "Syntax validation passed. Required front matter, core blocks, and line-id format are valid.",
+    "message": "Syntax validation passed for AIMD v1.5. Required front matter, core blocks, and canonical line formats (including ref() and @date) are valid.",
     "highlights": [
-      "front matter valid",
-      "core block order valid",
-      "line-id format valid"
+      "front matter strictly valid",
+      "core block sequences compliant",
+      "referential integrity verified inside document"
     ],
     "critical_issue_count": 0,
     "warning_count": 0,

@@ -4,12 +4,15 @@
   "fileTypes": ["aimd"],
   "patterns": [
     { "include": "#frontMatter" },
+    { "include": "#intentBlock" },
+    { "include": "#rulesBlock" },
     { "include": "#stateBlock" },
+    { "include": "#flowBlock" },
+    { "include": "#testBlock" },
     { "include": "#humanBlock" },
     { "include": "#schemaBlock" },
     { "include": "#apiBlock" },
-    { "include": "#sharedBlock" },
-    { "include": "#refAnnotation" },
+    { "include": "#genericBlock" },
     { "include": "#markdown" }
   ],
   "repository": {
@@ -20,6 +23,80 @@
       "contentName": "source.yaml",
       "patterns": [{ "include": "source.yaml" }]
     },
+    "canonicalLineExtras": {
+      "patterns": [
+        {
+          "match": "\\b(ref)\\(([^)]+)\\)",
+          "captures": {
+            "1": { "name": "keyword.operator.ref.aimd" },
+            "2": { "name": "markup.underline.link.aimd" }
+          }
+        },
+        {
+          "match": "(@\\d{4}-\\d{2}-\\d{2})",
+          "name": "constant.numeric.date.aimd"
+        }
+      ]
+    },
+    "intentBlock": {
+      "begin": "^(:::intent)(.*)$",
+      "end": "^(:::)$",
+      "name": "meta.block.intent.aimd",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.directive.aimd" },
+        "2": { "name": "entity.name.section.aimd" }
+      },
+      "patterns": [
+        {
+          "match": "^(g\\d+|ok\\d+)(:)",
+          "captures": {
+            "1": { "name": "markup.inserted.aimd" },
+            "2": { "name": "punctuation.separator.key-value.aimd" }
+          }
+        },
+        {
+          "match": "^(in\\d+|out\\d+)(:)",
+          "captures": {
+            "1": { "name": "markup.italic.aimd" },
+            "2": { "name": "punctuation.separator.key-value.aimd" }
+          }
+        },
+        { "include": "#canonicalLineExtras" }
+      ]
+    },
+    "rulesBlock": {
+      "begin": "^(:::rules)(.*)$",
+      "end": "^(:::)$",
+      "name": "meta.block.rules.aimd",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.directive.aimd" },
+        "2": { "name": "entity.name.section.aimd" }
+      },
+      "patterns": [
+        {
+          "match": "^(r\\d+)(:)",
+          "captures": {
+            "1": { "name": "markup.inserted.aimd" },
+            "2": { "name": "punctuation.separator.key-value.aimd" }
+          }
+        },
+        {
+          "match": "^(ban\\d+)(:)",
+          "captures": {
+            "1": { "name": "markup.deleted.aimd" },
+            "2": { "name": "punctuation.separator.key-value.aimd" }
+          }
+        },
+        {
+          "match": "^(fz\\d+)(:)",
+          "captures": {
+            "1": { "name": "constant.language.aimd" },
+            "2": { "name": "punctuation.separator.key-value.aimd" }
+          }
+        },
+        { "include": "#canonicalLineExtras" }
+      ]
+    },
     "stateBlock": {
       "begin": "^(:::state)(.*)$",
       "end": "^(:::)$",
@@ -27,9 +104,6 @@
       "beginCaptures": {
         "1": { "name": "keyword.control.directive.aimd" },
         "2": { "name": "entity.name.section.aimd" }
-      },
-      "endCaptures": {
-        "1": { "name": "keyword.control.directive.aimd" }
       },
       "patterns": [
         {
@@ -52,7 +126,50 @@
             "1": { "name": "markup.italic.aimd" },
             "2": { "name": "punctuation.separator.key-value.aimd" }
           }
-        }
+        },
+        { "include": "#canonicalLineExtras" }
+      ]
+    },
+    "flowBlock": {
+      "begin": "^(:::flow)(.*)$",
+      "end": "^(:::)$",
+      "name": "meta.block.flow.aimd",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.directive.aimd" },
+        "2": { "name": "entity.name.section.aimd" }
+      },
+      "patterns": [
+        {
+          "match": "^(s\\d+)(:)",
+          "captures": {
+            "1": { "name": "markup.inserted.aimd" },
+            "2": { "name": "punctuation.separator.key-value.aimd" }
+          }
+        },
+        { "include": "#canonicalLineExtras" }
+      ]
+    },
+    "testBlock": {
+      "begin": "^(:::test)(.*)$",
+      "end": "^(:::)$",
+      "name": "meta.block.test.aimd",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.directive.aimd" },
+        "2": { "name": "entity.name.section.aimd" }
+      },
+      "patterns": [
+        {
+          "match": "^(t\\d+)(:)",
+          "captures": {
+            "1": { "name": "markup.inserted.aimd" },
+            "2": { "name": "punctuation.separator.key-value.aimd" }
+          }
+        },
+        {
+          "match": "(->)",
+          "name": "keyword.operator.arrow.aimd"
+        },
+        { "include": "#canonicalLineExtras" }
       ]
     },
     "humanBlock": {
@@ -75,9 +192,6 @@
         "1": { "name": "storage.type.class.aimd" },
         "2": { "name": "entity.name.type.class.aimd" }
       },
-      "endCaptures": {
-        "1": { "name": "storage.type.class.aimd" }
-      },
       "patterns": [
         {
           "match": "(@deprecated(?:\\([^)]*\\))?|@since(?:\\([^)]*\\))?)",
@@ -94,7 +208,8 @@
         {
           "match": "(#\\w+)",
           "name": "constant.language.aimd"
-        }
+        },
+        { "include": "#canonicalLineExtras" }
       ]
     },
     "apiBlock": {
@@ -104,9 +219,6 @@
       "beginCaptures": {
         "1": { "name": "storage.type.function.aimd" },
         "2": { "name": "entity.name.function.aimd" }
-      },
-      "endCaptures": {
-        "1": { "name": "storage.type.function.aimd" }
       },
       "patterns": [
         {
@@ -119,24 +231,18 @@
             "1": { "name": "entity.other.attribute-name.aimd" },
             "2": { "name": "punctuation.separator.aimd" }
           }
-        }
+        },
+        { "include": "#canonicalLineExtras" }
       ]
     },
-    "sharedBlock": {
-      "begin": "^(:::(?:flow|rules|test|diff|intent|ref))(.*)$",
+    "genericBlock": {
+      "begin": "^(:::(?:diff|ref|abbr|ai|deps))(.*)$",
       "end": "^(:::)$",
-      "name": "meta.block.shared.aimd",
+      "name": "meta.block.generic.aimd",
       "beginCaptures": {
         "1": { "name": "keyword.control.directive.aimd" },
         "2": { "name": "string.unquoted.aimd" }
-      },
-      "endCaptures": {
-        "1": { "name": "keyword.control.directive.aimd" }
       }
-    },
-    "refAnnotation": {
-      "match": "(@ref:[^\\s]+)",
-      "name": "markup.underline.link.aimd"
     },
     "markdown": {
       "patterns": [

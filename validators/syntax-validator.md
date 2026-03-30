@@ -1,16 +1,17 @@
-# AIMD v1.4 Syntax Validator Specification
+# AIMD v1.5 Syntax Validator Specification
 
 ---
 
 ## 1. Purpose
 
-This document is the official specification for the syntax validator of `AIMD v1.4` documents.
+This document is the official specification for the syntax validator of `AIMD v1.5` documents.
 
 The syntax validator has three purposes:
 
-1. Determine whether the document satisfies v1.4 format requirements
+1. Determine whether the document satisfies v1.5 format requirements
 2. Ensure the canonical parser can read it stably
 3. Catch pre-processing failures early before semantic/compression validators run
+4. Verify well-formedness of `ref()` and `@date` annotations (§10.4, §10.5)
 
 The syntax validator is the first-pass checker that answers: **can this document be read?**
 
@@ -57,7 +58,7 @@ The document must be stably readable by a parser.
 
 ### 4.2 Canonical Shape
 
-The v1.4 core shape is `front matter + core blocks + line-id payload`.
+The v1.5 core shape is `front matter + core blocks + line-id payload`.
 
 ### 4.3 Minimal Strictness
 
@@ -86,7 +87,7 @@ Error codes:
 
 Checks:
 
-- `aimd: "1.4"` exists
+- `aimd: "1.5"` exists
 - `mode` if present is `c | r | cr`
 - `src` if present is within the allowed enum
 - `rev` if present is an integer >= 0
@@ -119,10 +120,12 @@ Error codes:
 
 Checks:
 
-- Core block lines follow `<id>: <payload>` format
+- Core block lines follow `<id>: <payload> [ref(<id>...)] [@YYYY-MM-DD]` format
 - Line IDs match the allowed pattern
 - No duplicate line IDs
-- Payload is not empty
+- `ref()` syntax is well-formed (comma-separated valid IDs inside parentheses)
+- `@date` syntax matches `@YYYY-MM-DD` and is only on `v` lines
+- `ref()` is always after payload but before `@date` if both are present
 
 Error codes:
 
@@ -130,25 +133,30 @@ Error codes:
 - `syn.line.invalid_id`
 - `syn.line.duplicate_id`
 - `syn.line.empty_payload`
+- `syn.line.invalid_ref_syntax`
+- `syn.line.invalid_date_format`
+- `syn.line.invalid_metadata_order`
 
 ### Level 5. Optional Block Shape
 
 Checks:
 
 - `schema/api/test/ref/human/diff` blocks have valid opening/closing
+- `:::test` follow `t<N>: <id>=<status> -> <assertion>` syntax (§12.3)
 - `ref` lines are in a minimally identifiable format
 - Optional blocks do not break block boundaries
 
 Error codes:
 
 - `syn.opt.invalid_ref_line`
+- `syn.opt.invalid_test_format`
 - `syn.opt.invalid_block_boundary`
 
 ---
 
 ## 6. Allowed Block Set
 
-The v1.4 syntax validator allows only these blocks:
+The v1.5 syntax validator allows only these blocks:
 
 - `intent`
 - `rules`
@@ -175,7 +183,7 @@ Unless a migration mode is separately designed, the syntax validator MUST treat 
 
 ### Required
 
-- `aimd: "1.4"`
+- `aimd: "1.5"`
 
 ### Optional
 
@@ -188,7 +196,7 @@ Unless a migration mode is separately designed, the syntax validator MUST treat 
 
 ```yaml
 ---
-aimd: "1.4"
+aimd: "1.5"
 src: md
 id: payment-retry
 rev: 3
@@ -256,7 +264,7 @@ Examples:
 
 - `g1`, `ok2`, `r3`, `ban1`, `fz1`
 - `v4`, `o1`, `a2`, `n3`, `ask1`
-- `s1`, `t2`, `ref3`, `p1`, `e2`
+- `s1`, `t2`, `ref3`, `p1`, `e2`, `in1`, `ok1`, `out1`, `r1`, `ban1`, `fz1`
 
 Duplicate line IDs are forbidden across the entire document.
 
@@ -269,8 +277,9 @@ The syntax validator does not deeply interpret payload meaning, but checks:
 - Payload exists after `:`
 - Payload is not whitespace-only
 - Line is not entirely a prose sentence
+- `ref()` and `@date` are placed at the end of the line in correct order (§10.4, §10.5)
 
-The last item is close to a semantic concern, but completely unstructured lines may be treated as syntax warnings or errors.
+The syntax validator MUST NOT check if the ID inside `ref()` actually exists. That is a SEMANTIC check.
 
 ---
 
@@ -299,7 +308,7 @@ Full existence checks belong to the semantic validator or runtime resolver. The 
 
 - Render-only document
 - Canonical line requirements may be relaxed
-- Not recommended as v1.4 handoff SoT
+- Not recommended as v1.5 handoff SoT
 
 ### `mode: cr`
 
@@ -331,7 +340,7 @@ Recommended criteria:
 ### Error
 
 - Front matter cannot be parsed
-- `aimd: "1.4"` missing
+- `aimd: "1.5"` missing
 - Core block missing
 - Unclosed block
 - Duplicate line ID

@@ -146,7 +146,7 @@ export function generateAimdFromMarkdown(content: string, filename: string): str
   return renderGeneratedAimd(
     analysis,
     {
-      aimd: '1.4',
+      aimd: '1.5',
       project: projectName,
       source: 'markdown',
       generatedBy: 'rule-based-generator',
@@ -166,7 +166,7 @@ export function generateAimdFromPrompt(promptText: string, title?: string): stri
   return renderGeneratedAimd(
     analysis,
     {
-      aimd: '1.4',
+      aimd: '1.5',
       project: projectName,
       source: 'prompt',
       generatedBy: 'rule-based-generator',
@@ -210,7 +210,7 @@ export function normalizeAimdContent(raw: string, filename: string): string {
 
   return stringifyWithFrontMatter(normalizedBody, {
     ...frontMatter,
-    aimd: '1.4',
+    aimd: '1.5',
     project: projectName,
     source: frontMatter.source ?? 'normalized',
     generatedBy: frontMatter.generatedBy ?? 'rule-based-generator',
@@ -247,6 +247,8 @@ export function validateAimdContent(raw: string, filePath?: string): ValidationI
   issues.push(...scanFenceIssues(body));
   issues.push(...scanDirectiveIssues(parsed.blocks));
   issues.push(...scanRefIssues(raw, filePath));
+  issues.push(...scanInternalRefIssues(parsed.blocks));
+  issues.push(...scanDateIssues(parsed.blocks));
 
   return issues;
 }
@@ -344,7 +346,6 @@ export function buildForHuman(filePath: string): string {
 
   for (const block of blocks) {
     const target = BLOCK_TARGET[block.type as keyof typeof BLOCK_TARGET] ?? 'shared';
-    if (target === 'ai') continue;
 
     if (block.type === 'schema') {
       parts.push(schemaToTable(block));
@@ -414,6 +415,77 @@ function abbrToMarkdown(block: AimdBlock): string {
     .filter(Boolean);
 
   return ['### Abbreviations', '| Abbr | Full |', '|------|------|', ...rows].join('\n');
+}
+
+function scanInternalRefIssues(blocks: AimdBlock[]): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const allIds = new Set<string>();
+  const refsToVerify: { id: string; ref: string }[] = [];
+
+  for (const block of blocks) {
+    const lines = block.content.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+
+      const idMatch = trimmed.match(/^([a-z]+\d+):/i);
+      if (idMatch) {
+        allIds.add(idMatch[1].toLowerCase());
+      }
+
+      const refMatch = trimmed.match(/ref\(([^)]+)\)/i);
+      if (refMatch) {
+        const internalRefs = refMatch[1].split(',').map(r => r.trim().toLowerCase());
+        for (const r of internalRefs) {
+          refsToVerify.push({ id: idMatch?.[1] || 'unknown', ref: r });
+        }
+      }
+    }
+  }
+
+  for (const item of refsToVerify) {
+    if (!allIds.has(item.ref)) {
+      issues.push({
+        severity: 'error',
+        code: 'ref.dangling_id',
+        message: `Referenced ID "${item.ref}" (by ${item.id}) not found in the document.`,
+      });
+    }
+  }
+
+  return issues;
+}
+
+function scanDateIssues(blocks: AimdBlock[]): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  for (const block of blocks) {
+    const lines = block.content.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+
+      const dateMatch = trimmed.match(/@(\d{4}-\d{2}-\d{2})/);
+      if (dateMatch) {
+        const dateStr = dateMatch[1];
+        if (!/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(dateStr)) {
+          issues.push({
+            severity: 'warning',
+            code: 'date.invalid_format',
+            message: `Date "${dateStr}" must strictly follow YYYY-MM-DD.`,
+          });
+        }
+
+        if (!trimmed.startsWith('v')) {
+          issues.push({
+            severity: 'warning',
+            code: 'date.not_on_v_line',
+            message: `@date annotation should ideally only be used on "v" (verified) lines.`,
+          });
+        }
+      }
+    }
+  }
+  return issues;
 }
 
 function analyzeSource(sourceText: string, fallbackTitle: string): GenerationAnalysis {
@@ -531,11 +603,11 @@ function renderGeneratedAimd(
 function renderIntentBlock(analysis: GenerationAnalysis): string {
   const lines = [
     `:::intent ${analysis.slug}`,
-    `goal: ${analysis.title}`,
-    `summary: ${analysis.summary}`,
+    `g1: ${analysis.title}`,
+    `ok1: ${analysis.summary}`,
   ];
   if (analysis.domainHints.length > 0) {
-    lines.push(`domains: ${analysis.domainHints.join(', ')}`);
+    lines.push(`in1: domains=${analysis.domainHints.join(',')}`);
   }
   lines.push(':::');
   return lines.join('\n');
@@ -552,25 +624,33 @@ function renderApiBlock(analysis: GenerationAnalysis): string {
 function renderFlowBlock(analysis: GenerationAnalysis): string {
   const lines = [`:::flow ${analysis.slug}`];
   analysis.flowSteps.forEach((step, index) => {
-    lines.push(`${index + 1}. ${step}`);
+    lines.push(`s${index + 1}: ${step}`);
   });
   lines.push(':::');
   return lines.join('\n');
 }
 
 function renderRulesBlock(analysis: GenerationAnalysis): string {
-  return [':::rules', ...analysis.ruleItems.map(item => `- ${item}`), ':::'].join('\n');
+  let idx = 1;
+  return [':::rules', ...analysis.ruleItems.map(item => `r${idx++}: ${item}`), ':::'].join('\n');
 }
 
 function renderTestBlock(analysis: GenerationAnalysis): string {
-  return [':::test ' + analysis.slug, ...analysis.testItems.map(item => `✓ ${item}`), ':::'].join('\n');
+  let idx = 1;
+  const lines = [':::test ' + analysis.slug];
+  analysis.testItems.forEach(item => {
+    lines.push(`t${idx++}: flow=completed -> ${item}`);
+  });
+  lines.push(':::');
+  return lines.join('\n');
 }
 
 function renderStateBlock(analysis: GenerationAnalysis, sourceKind: string): string {
   let idx = 1;
+  const now = new Date().toISOString().split('T')[0];
   const lines = [':::state', `n1: generated_from=${sourceKind}_input_via_rule_based_generator`];
 
-  analysis.verifiedItems.forEach(item => lines.push(`v${idx++}: ${item.replace(/\s+/g, '_').toLowerCase()}`));
+  analysis.verifiedItems.forEach(item => lines.push(`v${idx++}: ${item.replace(/\s+/g, '_').toLowerCase()} @${now}`));
 
   let oIdx = 1;
   analysis.assumptions.forEach(item => lines.push(`a${oIdx++}: ${item.replace(/\s+/g, '_').toLowerCase()}`));

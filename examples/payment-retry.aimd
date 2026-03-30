@@ -1,8 +1,8 @@
 ---
-aimd: "1.4"
+aimd: "1.5"
 src: md
 id: payment-retry
-rev: 3
+rev: 4
 mode: c
 ---
 
@@ -24,18 +24,25 @@ fz2: idempotency_key_format={orderId}_{timestamp}
 :::
 
 :::state
-v1: retry_409_on_processed
-v2: max_retry_3_confirmed
+v1: retry_409_on_processed @2026-03-30
+v2: max_retry_3_confirmed @2026-03-31
 o1: rollback_regression_check
 a1: 429_retry_after_header_supported
-n1: qa_validate_concurrent_retry
+n1: qa_validate_concurrent_retry ref(v1, r1)
 :::
 
 :::flow
 s1: fail_payment
-s2: check_retry_eligibility
-s3: validate_idempotency_key
-s4: call_payment_api
-s5: on_409_return_existing_result
+s2: check_retry_eligibility ref(r2)
+s3: validate_idempotency_key ref(r1, fz2)
+s4: call_payment_api ref(fz1)
+s5: on_409_return_existing_result ref(v1)
 s6: on_success_clear_retry_state
+:::
+
+:::test
+t1: v1=verified -> route(POST /api/payment/retry)
+t2: v2=verified -> env(PAYMENT_MAX_RETRY)
+t3: ban1 -> no_table(duplicate_charge_log)
+t4: n1=completed -> file(tests/retry-concurrent.test.ts)
 :::

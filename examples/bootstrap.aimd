@@ -1,5 +1,5 @@
 ---
-aimd: "1.4"
+aimd: "1.5"
 src: prompt
 id: project-bootstrap-v1
 rev: 1
@@ -7,53 +7,49 @@ mode: c
 ---
 
 :::intent
-g1: [Describe the primary project goal in one line]
-g2: [Add secondary goals if any]
-ok1: [Specify the first success metric]
-ok2: [Define qualitative/quantitative success criteria]
-in1: [List core features within code scope]
-out1: [Clearly state features excluded from this project]
+g1: [Primary project goal]
+ok1: [First success metric]
+ok2: [Total count/threshold success criteria]
+in1: [In-scope features or modules]
+out1: [Modules out-of-scope for the current phase]
 :::
 
 :::rules
-r1: stack=[Framework]+[DB]+[ORM]+[UI Library]
-r2: auth=[Auth Method]+[SSO Necessity]
-r3: coding_style=[Coding Style Guidelines]
-ban1: [Actions that must never be included or permitted]
-fz1: [Fixed data structures or file paths that must not change]
+r1: stack=[Frontend]+[Backend]+[DB]+[ORM]
+r2: auth=[Method] ref(ok1)
+ban1: [Prohibited actions or storage types]
+fz1: [Frozen file paths or endpoint contracts]
 :::
 
 :::state
-v1: [Facts or tasks already verified or completed]
-o1: [Open issues or decisions yet to be made]
-a1: [Assumptions or preconditions under discussion]
-n1: [The very first task to undertake (Next Action)]
+v1: [Already verified fact or milestone] @YYYY-MM-DD
+o1: [Open issue or pending decision]
+a1: [Assumptions requiring validation]
+n1: [Immediate next task] ref(v1, r1)
 :::
 
 :::flow
-s1: [First milestone (e.g., Infrastructure Setup)]
-s2: [Second milestone (e.g., Core API Implementation)]
-s3: [Third milestone (e.g., Frontend Integration)]
+s1: [Infrastructure setup]
+s2: [Backend/API implementation] ref(s1, r1)
+s3: [Frontend integration] ref(s2, r2)
 :::
 
 :::schema
-[Data Table 1](column1, column2, ...)
-[Data Table 2](column1 FK->Table1.id, ...)
+[Table](column1, column2, ...)
+[Table](column1 ref(Table.col), ...)
 :::
 
 :::api
-POST /api/[path]: [Description]
-GET  /api/[path]: [Description]
+POST /api/[endpoint]: [Input]->[Output]
+GET  /api/[endpoint]: [Query]->[Data]
 :::
 
-:::ref
--- [Relevant Environment Variables]
-ENV_VAR_1=description
--- [Reference File Paths]
-src/lib/main.ts
+:::test
+t1: v1=verified -> file(path/to/main.ts)
+t2: n1=completed -> route(POST /api/test)
+t3: ban1 -> no_table(table_name)
 :::
 
 :::human
-[Use this block to provide narrative context or business rationale for human stakeholders.]
-[It serves to complement the concise representations in the core blocks.]
+[Optional: Narrative context or business rationale for human stakeholders.]
 :::

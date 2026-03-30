@@ -1,4 +1,4 @@
-# AIMD v1.4 Semantic Validator Specification
+# AIMD v1.5 Semantic Validator Specification
 
 ---
 
@@ -12,6 +12,8 @@ The semantic validator is not a simple grammar checker. Its core purposes are:
 2. Detect semantic conflicts and duplications within the document
 3. Determine whether ACP projection is possible without meaning loss
 4. Evaluate whether handoff safety is maintained while keeping token cost targets
+5. Verify referential integrity of `ref()` cross-references (§10.4)
+6. Ensure `:::test` assertions are linked to valid state or rule IDs (§12.3)
 
 ---
 
@@ -43,8 +45,8 @@ syntax validator
         -> compression validator
 ```
 
-- `syntax validator`: is the format correct?
-- `semantic validator`: is the meaning interpretable consistently?
+- `syntax validator`: is the format (including `ref` and `@date` syntax) correct?
+- `semantic validator`: is the meaning interpretable consistently, and are references valid?
 - `compression validator`: is the cost acceptable?
 
 The semantic validator MUST run only after syntax passes.
@@ -98,10 +100,10 @@ Before checking, the semantic validator normalizes input into the following mode
 ```yaml
 doc:
   meta:
-    aimd: "1.4"
+    aimd: "1.5"
     src: md
     id: payment-retry
-    rev: 3
+    rev: 4
     mode: c
   blocks:
     - type: intent
@@ -123,9 +125,10 @@ line:
   id: "r2"
   block: "rules"
   prefix: "r"
-  payload_raw: "plan_sot=subscriptions.plan"
+  payload_raw: "plan_sot=subscriptions.plan ref(r1) @2026-03-31"
   payload_norm: "plan_sot=subscriptions.plan"
-  refs: []
+  refs: ["r1"]
+  date: "2026-03-31"
 ```
 
 ### 5.3 Source Fact Model
@@ -248,6 +251,36 @@ Error codes:
 - `sem.dup.cross_block_duplicate`
 - `sem.dup.synonym_duplicate`
 
+### Level 7. Referential Integrity (v1.5)
+
+Purpose: verify all `ref()` cross-references point to real items
+
+Checks:
+
+- Do all IDs in `ref()` exist as valid line IDs in the same document?
+- Are references circular in a way that breaks logic (e.g., in `flow`)?
+- Are references "conservative" (sourced from explicit evidence, not guessed)?
+
+Error codes:
+
+- `sem.ref.dangling_reference`
+- `sem.ref.circular_dependency`
+- `sem.ref.speculative_reference`
+
+### Level 8. Test Mapping (v1.5)
+
+Purpose: verify `:::test` assertions are correctly mapped
+
+Checks:
+
+- Does every `t` line reference a valid `<state-id>` or `<rule-id>`?
+- Is the mapped status (`verified`, `completed`, etc.) logically sound?
+
+Error codes:
+
+- `sem.test.invalid_target_id`
+- `sem.test.logic_mismatch`
+
 ---
 
 ## 7. Per-Line Semantic Rules
@@ -289,8 +322,10 @@ Error code: `sem.rules.freeze_not_boundary`
 
 ### 7.6 `v*`
 
-- Verified must be a confirmed fact with a basis
-- Future plans or wishes are not verified
+- Verified signifies a confirmed fact OR a completed milestone (§11.3)
+- Must have a factual basis or evidence of completion
+- Future plans or purely aspirational wishes are not verified
+- `@date` metadata is treated as a non-semantic attribute (must not influence fact logic)
 
 Error code: `sem.state.verified_future_tense`
 
@@ -374,6 +409,7 @@ Fail if any of:
 - Minimum required lines for a role are absent from the document
 - Only line ID references exist without the original lines
 - Meaning connections break after projection
+- **Crucial dependent lines (referenced via `ref()`) are not included in the projection** (§16.2)
 - Understanding requires the human block
 
 ---
@@ -386,17 +422,19 @@ scores:
   consistency:          0-100
   state_discipline:     0-100
   projection_safety:    0-100
+  referential_integrity: 0-100
   duplication_control:  0-100
   semantic_total:       0-100
 ```
 
 Recommended weights:
 
-- fidelity: 25
-- consistency: 20
-- state_discipline: 20
+- fidelity: 20
+- consistency: 15
+- state_discipline: 15
 - projection_safety: 20
-- duplication_control: 15
+- referential_integrity: 20
+- duplication_control: 10
 
 ### Judgment Criteria
 
@@ -469,27 +507,31 @@ issues:
 
 Recommended implementation order:
 
-1. One fact, one location check
-2. Verified/open/assumption/next classification
-3. Source fidelity check
-4. Projection safety check
-5. Duplication + synonym drift check
-6. Scoring + repair hints
+1. Referential integrity (`ref`) check
+2. Test mapping (`:::test`) check
+3. One fact, one location check
+4. Verified/open/assumption/next classification
+5. Source fidelity check
+6. Projection safety check
+7. Duplication + synonym drift check
+8. Scoring + repair hints
 
 ---
 
-## 14. Key Differences in v1.4
+## 14. Key Differences in v1.5
 
-Compared to a generic semantic validator, the v1.4 semantic validator differs in:
+Compared to a generic semantic validator, the v1.5 semantic validator differs in:
 
 1. Judgment centers on `:::state`, not `:::ai`
 2. Canonical lines take precedence over prose
-3. One fact, one location violation is a core error
-4. Projection viability is included in semantic quality
-5. Meaning loss caused by compression is within semantic scope
+3. Referential integrity (no dangling IDs) is a mandatory check
+4. `v` prefix has a dual meaning (fact vs milestone) but single logical state
+5. One fact, one location violation is a core error
+6. Projection viability includes dependent reference resolution
+7. Meaning loss caused by compression is within semantic scope
 
 ---
 
 ## 15. Conclusion
 
-The AIMD v1.4 semantic validator answers not "is the format correct?" but **"can this canonical line set be interpreted with nearly identical meaning by another AI, and can it be safely handed off via projection alone?"**
+The AIMD v1.5 semantic validator answers not "is the format correct?" but **"can this canonical line set be interpreted with nearly identical meaning by another AI, do all internal references point to valid facts, and can it be safely handed off via projection alone?"**
