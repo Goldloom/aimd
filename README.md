@@ -4,7 +4,7 @@
 
 **Canonical Semantic Memory for Multi-Agent Handoff**
 
-[![AIMD Spec](https://img.shields.io/badge/AIMD-v1.4--Canonical-orange)](spec_en/AIMD-v1.4.md)
+[![AIMD Spec](https://img.shields.io/badge/AIMD-v1.4--Canonical-orange)](spec/en/AIMD-v1.4.md)
 
 ---
 
@@ -195,14 +195,14 @@ syntax validator → semantic validator → compression validator
 
 ## 🛠️ Core Repository Structure
 
-- [`spec_en/`](spec_en/): English Core Specifications & Guidelines
-  - [`AIMD-v1.4.md`](spec_en/AIMD-v1.4.md): AIMD Core Grammar & Block Standards.
-  - [`generator-spec.md`](spec_en/generator-spec.md): Specification for AI model generator engines.
-  - [`generator-prompt.md`](spec_en/generator-prompt.md): Master prompts for standard AIMD generation.
-- [`spec_ko/`](spec_ko/): Korean Core Specifications & Guidelines
-  - [`AIMD-v1.4-ko.md`](spec_ko/AIMD-v1.4-ko.md): Korean translation of Core Grammar.
-  - [`generator-spec-ko.md`](spec_ko/generator-spec-ko.md): Korean translation of Generator Spec.
-  - [`generator-prompt-ko.md`](spec_ko/generator-prompt-ko.md): Korean translation of Master Prompts.
+- [`spec/en/`](spec/en/): English Core Specifications & Guidelines
+  - [`AIMD-v1.4.md`](spec/en/AIMD-v1.4.md): AIMD Core Grammar & Block Standards.
+  - [`generator-spec.md`](spec/en/generator-spec.md): Specification for AI model generator engines.
+  - [`generator-prompt.md`](spec/en/generator-prompt.md): Master prompts for standard AIMD generation.
+- [`spec/ko/`](spec/ko/): Korean Core Specifications & Guidelines
+  - [`AIMD-v1.4-ko.md`](spec/ko/AIMD-v1.4-ko.md): Korean translation of Core Grammar.
+  - [`generator-spec-ko.md`](spec/ko/generator-spec-ko.md): Korean translation of Generator Spec.
+  - [`generator-prompt-ko.md`](spec/ko/generator-prompt-ko.md): Korean translation of Master Prompts.
 ├── validators/
 │   ├── syntax-validator.md
 │   ├── semantic-validator.md
@@ -238,8 +238,8 @@ Place the `.cursorrules` file in your project root. Any AI agent (Cursor, Copilo
 ### 2. Enable Slash Commands (`.agents/workflows/aimd.md`)
 In tools like Antigravity, you can call the `/aimd` command at any time to pull up specification summaries and instructions.
 
-### 3. Detailed Reference (`spec_en/` folder)
-Invite the AI to learn deep specification details by referencing documents in the `spec_en/` folder.
+### 3. Detailed Reference (`spec/en/` folder)
+Invite the AI to learn deep specification details by referencing documents in the `spec/en/` folder.
 
 ---
 
