@@ -655,7 +655,41 @@ These goals do not guarantee full determinism from format alone. Remaining varia
 
 ---
 
-## 24. Conclusion
+## 24. Common Misconceptions
+
+This section addresses known misinterpretations of the AIMD spec.
+
+### Misconception 1: "MD→AIMD conversion is intentional lossy compression"
+
+**Wrong.** MD→AIMD conversion MUST be semantically lossless.
+
+| | Incorrect understanding | Correct understanding |
+|---|---|---|
+| What is compressed | Semantic content (meaning) | Expression form (verbosity, redundancy) |
+| Goal | Intentional information loss | 100% semantic preservation |
+| "compression" means | Fewer facts | Normalized, non-redundant expressions of the same facts |
+
+### Misconception 2: "'Projection' describes the conversion method"
+
+**Wrong.** "Projection" in AIMD refers exclusively to **ACP (Agent Context Projection)** — the downstream operation of selecting role-specific lines from a *completed* canonical document.
+
+```text
+Correct usage of "projection":
+  ACP-FE = select intent(g,ok) + rules(relevant) + state(v,o,n) + flow
+  ACP-BE = select intent(g,ok) + rules(all) + state(v,o,a,n) + api + schema
+
+NOT correct: "MD→AIMD is a projection"
+```
+
+The MD→AIMD conversion is a **lossless semantic restructuring**, not a projection.
+
+### Misconception 3: "'Prose-Free Zone' means semantic content is removed"
+
+**Wrong.** Prose-Free Zone prohibits *free prose expression inside core blocks* — long sentences, vague qualifiers, rhetorical repetition. It does not permit omitting facts. Every fact from the source MUST be represented as a canonical line.
+
+---
+
+## 25. Conclusion
 
 The official direction of v1.4 in four lines:
 

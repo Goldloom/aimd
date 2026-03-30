@@ -313,6 +313,40 @@ v1.4는 다음 수치를 목표로 합니다:
 
 ---
 
-## 24. 결론 (Conclusion)
+## 24. 흔한 오해 (Common Misconceptions)
+
+이 섹션은 AIMD 규격에 대해 알려진 오해를 정정합니다.
+
+### 오해 1: "MD→AIMD 변환은 의도적 손실 압축이다"
+
+**틀렸습니다.** MD→AIMD 변환은 반드시 의미 손실이 없어야 합니다(semantically lossless).
+
+| | 잘못된 이해 | 올바른 이해 |
+|---|---|---|
+| 압축 대상 | 의미(semantic content) | 표현 형식(장황함, 중복) |
+| 목표 | 의도적 정보 손실 | 의미 100% 보존 |
+| "압축"의 의미 | 더 적은 사실 | 동일한 사실을 정규화된 표현으로 |
+
+### 오해 2: "'투영(Projection)'이 변환 방식을 설명한다"
+
+**틀렸습니다.** AIMD에서 "투영(Projection)"은 오직 **ACP(Agent Context Projection)**에만 해당합니다 — 완성된 canonical 문서에서 역할별 라인을 선택하는 하위 작업입니다.
+
+```text
+올바른 "투영" 사용:
+  ACP-FE = intent(g,ok) + rules(relevant) + state(v,o,n) + flow 선택
+  ACP-BE = intent(g,ok) + rules(all) + state(v,o,a,n) + api + schema 선택
+
+잘못된 사용: "MD→AIMD 변환이 투영이다"
+```
+
+MD→AIMD 변환은 **의미 보존적 구조 재구성(lossless semantic restructuring)**이지, 투영이 아닙니다.
+
+### 오해 3: "'서술형 문장 금지 구역'이 의미 제거를 허용한다"
+
+**틀렸습니다.** 서술형 문장 금지 구역은 코어 블록 내의 *서술형 표현 방식*(긴 문장, 모호한 수식어, 수사적 반복)을 금지합니다. 사실을 생략하는 것은 허용되지 않습니다. 소스의 모든 사실은 canonical 라인으로 표현되어야 합니다.
+
+---
+
+## 25. 결론 (Conclusion)
 
 AIMD v1.4는 겉모습은 마크다운처럼 보이지만, 근본적으로는 **AI 에이전트들이 최소한의 토큰 비용과 최소한의 의미적 모호성으로 컨텍스트를 전달할 수 있도록 설계된 정형 메모리 포맷**입니다.
