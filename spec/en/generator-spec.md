@@ -78,6 +78,16 @@ The generator MUST maintain stable line IDs.
 
 The generator MUST NOT introduce facts absent from the source as verified.
 
+### 4.6 Lossless Source Fidelity
+
+The generator MUST preserve all semantic content from the source.
+
+- Compression target: expression FORM (verbosity, redundancy, prose noise)
+- Compression MUST NOT target: semantic content (facts, constraints, states)
+- Every fact present in the source MUST appear as a canonical line in the output
+
+This principle is separate from ACP. ACP projection (role-specific line selection from a completed canonical doc) is a downstream operation and does not affect the lossless requirement of the MD→AIMD conversion itself.
+
 ---
 
 ## 5. Required Generation Steps
@@ -288,6 +298,8 @@ Policy:
 
 - Preserve headings/lists/tables as canonical facts
 - Prioritize extraction of negative constraints, numbers, dates, boundaries
+- ALL facts from source MUST appear in canonical output — lossless conversion
+- Compress expression form only; do not omit, summarize, or reinterpret meaning
 
 ### 9.3 AIMD → AIMD Update
 
@@ -345,6 +357,7 @@ Generators commonly produce these failures:
 4. Writing `:::human` blocks that are excessively long
 5. Generating ACP as new summaries instead of line projections
 6. Rebuilding stable IDs from scratch on revision
+7. Treating MD→AIMD conversion as lossy compression — omitting or summarizing source facts instead of normalizing their form
 
 ---
 
