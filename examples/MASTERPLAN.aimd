@@ -1,0 +1,60 @@
+---
+aimd: "1.4"
+id: masterplan-en-v1
+src: masterplan_pattern
+rev: 1
+mode: c
+---
+
+:::intent
+-- [🌟 North Star: Direction and Final Project Goals]
+g1: [ProjectName]_AI_Native_Unified_Platform_Construction
+ok1: mvp_completion_criteria=[Specific Criterion 1]
+ok2: quality_standard=code_coverage_80%+
+in1: [List core features included in the development scope]
+out1: [List features explicitly excluded from this project]
+:::
+
+:::rules
+-- [⚖️ Captain's Law: AI Action Rules and Absolute Principles] & [📐 Blueprint: Core Constraints]
+r1: stack=[Framework]+[DB]+[ORM]
+r2: auth=[Auth Method]+[SSO Necessity]
+r3: workflow=session_start(RULES)->execute(TODO)->verify->push->report
+ban1: [Actions that must never be included or permitted]
+fz1: [Fixed data structures or file paths that must not change]
+:::
+
+:::state
+-- [🗼 Control Tower: Overall Status] & [📖 Logbook: Findings and Insights]
+v1: [Facts or tasks already verified or completed (PROGRESS)]
+o1: [Open issues or decisions yet to be made]
+a1: [Assumptions or preconditions under discussion (INSIGHTS)]
+n1: [The very first task to undertake (TODO - Next Action)]
+ask1: [Questions requiring user confirmation]
+:::
+
+:::flow
+-- [⚙️ Engine Room: Major Milestones and Execution Order]
+s1: [First milestone (e.g., Infrastructure Setup)]
+s2: [Second milestone (e.g., Core Feature Implementation)]
+s3: [Third milestone (e.g., Optimization and Deployment)]
+:::
+
+:::schema
+-- [📐 Blueprint: Database Schema Specification]
+[Table1](column1 PK, column2, ...)
+[Table2](column1 PK, table1_id FK->Table1.id, ...)
+:::
+
+:::api
+-- [📐 Blueprint: API Interface Specification]
+POST /api/[path]: [Description]
+GET  /api/[path]: [Description]
+:::
+
+:::human
+-- [📖 Logbook: Narrative Context and Business Background for Human Stakeholders]
+Use this block to provide detailed explanations that complement the dry 
+representations in the core blocks, the project vision, or lessons to prevent 
+recurring mistakes.
+:::

@@ -105,6 +105,18 @@ s4: return_existing_or_new_result
 
 ---
 
+## 🚀 AI-Native Workflow (Getting Started)
+
+AIMD is not just a document format; it's a **new planning-development workflow** for collaborating with AI. 
+Refer to the following documents to learn how to maximize productivity by starting new projects with AIMD from day zero.
+
+*   **[Practical Workflow Guide (GUIDE.md)](GUIDE.md)**: Step-by-step guide from day 0 planning to implementation.
+*   **[New Project Template (bootstrap-en.aimd)](examples/bootstrap-en.aimd)**: A standard template you can copy and use immediately.
+*   **[Unified MasterPlan Template (MASTERPLAN-en.aimd)](examples/MASTERPLAN-en.aimd)**: An advanced template that consolidates goals, rules, tasks, and insights into a single orchestration file.
+*   **[Prompt-Zero Philosophy (PHILOSOPHY-en.md)](PHILOSOPHY-en.md)**: Why and how AIMD replaces traditional prose-based prompting.
+
+---
+
 ## Key Principles
 
 | Principle | Description |
@@ -216,7 +228,6 @@ syntax validator → semantic validator → compression validator
     ├── validator-output-syntax-pass.json
     ├── validator-output-semantic-warnings.json
     └── validator-output-compression-fail.json
-```
 
 ---
 

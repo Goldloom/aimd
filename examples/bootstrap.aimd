@@ -1,0 +1,59 @@
+---
+aimd: "1.4"
+src: prompt
+id: project-bootstrap-v1
+rev: 1
+mode: c
+---
+
+:::intent
+g1: [Describe the primary project goal in one line]
+g2: [Add secondary goals if any]
+ok1: [Specify the first success metric]
+ok2: [Define qualitative/quantitative success criteria]
+in1: [List core features within code scope]
+out1: [Clearly state features excluded from this project]
+:::
+
+:::rules
+r1: stack=[Framework]+[DB]+[ORM]+[UI Library]
+r2: auth=[Auth Method]+[SSO Necessity]
+r3: coding_style=[Coding Style Guidelines]
+ban1: [Actions that must never be included or permitted]
+fz1: [Fixed data structures or file paths that must not change]
+:::
+
+:::state
+v1: [Facts or tasks already verified or completed]
+o1: [Open issues or decisions yet to be made]
+a1: [Assumptions or preconditions under discussion]
+n1: [The very first task to undertake (Next Action)]
+:::
+
+:::flow
+s1: [First milestone (e.g., Infrastructure Setup)]
+s2: [Second milestone (e.g., Core API Implementation)]
+s3: [Third milestone (e.g., Frontend Integration)]
+:::
+
+:::schema
+[Data Table 1](column1, column2, ...)
+[Data Table 2](column1 FK->Table1.id, ...)
+:::
+
+:::api
+POST /api/[path]: [Description]
+GET  /api/[path]: [Description]
+:::
+
+:::ref
+-- [Relevant Environment Variables]
+ENV_VAR_1=description
+-- [Reference File Paths]
+src/lib/main.ts
+:::
+
+:::human
+[Use this block to provide narrative context or business rationale for human stakeholders.]
+[It serves to complement the concise representations in the core blocks.]
+:::

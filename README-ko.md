@@ -106,6 +106,18 @@ s4: return_existing_or_new_result
 
 ---
 
+## 🚀 AI-Native 실전 워크플로우 (Getting Started)
+
+AIMD는 단순한 문서 형식이 아니라 AI와 협업하는 **새로운 기획-개발 워크플로우**입니다. 
+신규 프로젝트를 처음부터 AIMD로 시작하여 생산성을 극대화하는 방법은 다음 문서를 참조하세요.
+
+*   **[실전 워크플로우 가이드 (GUIDE-ko.md)](GUIDE-ko.md)**: 0일차 기획부터 구현까지의 단계별 가이드.
+*   **[신규 프로젝트 템플릿 (bootstrap-ko.aimd)](examples/bootstrap-ko.aimd)**: 바로 복사해서 사용할 수 있는 표준 템플릿.
+*   **[통합 관제 마스터플랜 (MASTERPLAN-ko.aimd)](examples/MASTERPLAN-ko.aimd)**: 6개 관리 파일(목표, 규칙, 할일 등)을 하나로 통합한 고급 템플릿.
+*   **[프롬프트 제로 철학 (PHILOSOPHY-ko.md)](PHILOSOPHY-ko.md)**: 왜 AIMD가 기존의 서술형 프롬프트를 대체해야 하는지에 대한 철학적 배경.
+
+---
+
 ## 핵심 원칙 (Key Principles)
 
 | 원칙 | 설명 |
