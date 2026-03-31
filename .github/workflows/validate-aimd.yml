@@ -21,4 +21,4 @@ jobs:
     - name: Run AIMD Validator on Examples
       run: |
         # Find all .aimd files in the examples directory and validate them
-        find examples/ -name "*.aimd" -exec python validators/validator.py {} +
+        find examples/ -name "*.aimd" -exec python validators/validator.py {} \;
