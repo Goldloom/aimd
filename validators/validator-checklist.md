@@ -43,3 +43,7 @@
 
 ## Final Judgment Criterion
 A good AIMD v1.5 document is one that is **compact, verifiable via ref() and :::test, written in stable semantic units, and interpretable by the next AI without any prose**.
+
+---
+
+SPDX-License-Identifier: Apache-2.0

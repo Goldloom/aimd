@@ -1,61 +1,75 @@
-# AIMD Philosophy: Toward Prompt-Zero Collaboration (v1.5)
+# AIMD Philosophy
 
-## 🌀 The Era of Liquid Memory (Legacy Prompts)
-Current interactions with AI agents rely heavily on long-form prose prompts. While intuitive, these prompts are **"liquid"**:
-- **Volatility**: They are easily forgotten as conversation history grows.
-- **Ambiguity**: Natural language is prone to misinterpretation by LLMs.
-- **Redundancy**: Developers must repeat the same context (Stack, Rules, Goals) in every session.
-- **Waste**: High token consumption due to verbose instructions.
+From prompting to canonical memory.
+
+[한국어 철학 문서](PHILOSOPHY-ko.md)
 
 ---
 
-## 💎 The Era of Verifiable Precision Memory (AIMD v1.5)
-AIMD (AI-native Markdown) evolves "Prompting" into **"Memory as Code."** By encapsulating intents, rules, schemas, and flows into structured, machine-readable blocks (:::), we achieve **"Verifiable Precision Memory"**:
-- **Persistence**: Knowledge is stored in version-controlled files, not fleeting chat history.
-- **Symbolic Precision**: Using IDs and symbols reduces semantic drift and improves AI reasoning.
-- **Zero-Redundancy**: The spec *is* the prompt. AI reads the file once and knows exactly what to do.
-- **Verifiable Integrity (v1.5)**: Using `ref()` cross-references and `@date` temporal metadata, we ensure every fact is traceable and every milestone is verifiable.
-- **Handoff Fidelity**: Different AI agents can pick up where the last one left off with 100% context alignment and zero ambiguity.
+## The Problem
+
+Normal prompt-driven workflows are fragile.
+
+- context is repeated
+- constraints are forgotten
+- intent drifts across sessions
+- handoff quality collapses as agent count grows
+
+This is not only a UX problem.
+It is a memory-format problem.
 
 ---
 
-### [Vision] Prompt-Zero Architecture
-The ultimate goal of AIMD is a workflow where the human no longer "commands," but "orchestrates."
+## The Shift
 
-Instead of:
-> "Hey AI, please build a login page using Next.js 15, and make sure the button is blue, and don't forget to use Drizzle for the DB..."
+AIMD treats project memory as a structured artifact.
 
-In AIMD v1.5, you simply say:
-> "Read `MASTERPLAN.aimd` and execute `v12` ref(v11)."
+Instead of saying:
 
-Everything else—the technical stack, the design tokens, the database schema—is already **"Solidified"** and **"Linked"** in the `.aimd` files.
+> Build X, remember Y, do not forget Z.
+
+The workflow becomes:
+
+> Read the canonical AIMD state and continue.
+
+This is the shift from prompt-heavy work to memory-first work.
 
 ---
 
-### [Example] AGENT.aimd
-A "Prompt-Zero" agent is configured via a file, not a prefix.
+## Core Belief
 
-```markdown
-:::agent
-id: lead-architect
-directive: strict_canonical_memory_enforcer
-workflow: [read_master_plan, apply_rules, report_state]
-:::
+The best prompt is not a longer prompt.
+It is a better memory substrate.
 
-:::rules
-r1: symbolic_expression_only
-r2: no_prose_redundancy
-r3: read_masterplan_before_execution
-ban1: execute_without_verification ref(r3)
-:::
+That is why AIMD focuses on:
 
-:::state
-v1: masterplan_reviewed ref(r3) @2026-03-31
-:::
+- canonical structure
+- stable identifiers
+- explicit references
+- low-cost semantic carryover
 
-:::test
-t1: v1=verified -> file(MASTERPLAN.aimd)
-:::
-```
+---
 
-Join us in building the future of **Solid AI Memory**. Transition from "Prompting" to "Architecting."
+## Public vs Extended AIMD
+
+The public Core should stay small.
+
+Its job is to preserve shared meaning for:
+
+- intent
+- constraints
+- state
+- flow
+
+Higher AIMD layers may evolve faster, but the Core should remain simple enough to adopt broadly.
+
+---
+
+## Direction
+
+AIMD is not trying to become a prose replacement for everything.
+It is trying to become the canonical memory layer for AI collaboration.
+
+---
+
+SPDX-License-Identifier: Apache-2.0

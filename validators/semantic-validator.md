@@ -535,3 +535,7 @@ Compared to a generic semantic validator, the v1.5 semantic validator differs in
 ## 15. Conclusion
 
 The AIMD v1.5 semantic validator answers not "is the format correct?" but **"can this canonical line set be interpreted with nearly identical meaning by another AI, do all internal references point to valid facts, and can it be safely handed off via projection alone?"**
+
+---
+
+SPDX-License-Identifier: Apache-2.0

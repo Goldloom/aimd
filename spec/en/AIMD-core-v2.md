@@ -137,3 +137,7 @@ Standard validator codes:
 - `AIMD-v1.4.md` and `AIMD-v1.5.md` remain public legacy specifications
 - AIMD Core v2 is the current public next-step core draft
 - higher AIMD layers may be specified separately
+
+---
+
+SPDX-License-Identifier: Apache-2.0

@@ -845,3 +845,7 @@ verifiable references
 ```
 
 AIMD v1.5 looks like Markdown, but it is fundamentally a canonical memory format designed for AI agents to hand off context with the least token cost and the least semantic ambiguity. v1.5 extends this with verifiable cross-references and declarative test assertions, moving AIMD from "structured natural language" toward "checkable specification".
+
+---
+
+SPDX-License-Identifier: Apache-2.0

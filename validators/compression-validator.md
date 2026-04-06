@@ -76,3 +76,7 @@ Interpretation:
 ## 14. Conclusion
 
 The AIMD v1.5 compression validator is not a tool that checks "is this document short?" It answers: **"can this canonical memory be operated cheaply enough for handoff while maintaining meaning and verifiability?"**
+
+---
+
+SPDX-License-Identifier: Apache-2.0

@@ -1,38 +1,71 @@
 # Changelog
 
-All notable changes to the AIMD (AI-Enhanced Markdown) specification and its ecosystem will be documented in this file.
+All notable public-facing changes to AIMD are documented here.
+
+This changelog distinguishes between:
+
+- legacy public specs
+- the public AIMD Core v2 draft
+- repository-level documentation changes
+
+---
+
+## [2.0-core-draft] - 2026-04-06
+
+### Public Positioning Update
+
+- Repositioned the repository around a public `AIMD Core v2` draft plus legacy public specs.
+- Clarified that `AIMD v1.5` and earlier remain the public legacy line.
+- Clarified that higher AIMD layers, commercial implementations, and hosted products may evolve separately.
+
+### New Public Core Spec
+
+- Added `spec/en/AIMD-core-v2.md`.
+- Added `spec/ko/AIMD-core-v2-ko.md`.
+- Defined the minimal public Core around:
+  - front matter
+  - `:::intent`
+  - `:::rules`
+  - `:::state`
+  - `:::flow`
+  - optional `:::diff`
+
+### Documentation Refresh
+
+- Rewrote `README.md` and `README-ko.md` for the public Core strategy.
+- Rewrote `GUIDE.md` and `GUIDE-ko.md` as practical getting-started guides for AIMD Core.
+- Rewrote `PHILOSOPHY.md` and `PHILOSOPHY-ko.md` around the shift from prompting to canonical memory.
+- Updated `CONTRIBUTING.md` and added Korean contribution guidance.
+
+---
 
 ## [1.5.0] - 2026-03-31
 
-### 🚀 Major Specification Upgrade (Verifiable Precision Memory)
+### Major Specification Upgrade
 
-- **Introduction of `ref(id)`**: Added support for explicit cross-references between lines and blocks. This ensures referential integrity and prevents semantic drift in multi-agent orchestration.
-- **Declarative Testing via `:::test`**: Standardized the `:::test` block with a declarative assertion vocabulary (`file`, `route`, `no_table`, `env`). This enables automated self-verification by AI agents.
-- **Temporal Metadata `@date`**: Added support for completion evidence on `v` (verified) lines using the `@YYYY-MM-DD` format.
-- **Standardized Line Prefixes**: Updated standard prefixes for `intent` (`g`, `ok`, `in`, `out`), `rules` (`r`, `ban`, `fz`), `state` (`v`, `o`, `a`, `n`, `ask`), and `flow` (`s`).
-- **Forbidden Rules (`ban`)**: Formally defined the `ban` prefix for stricter control over AI behavior.
+- Introduced `ref(id)` for explicit cross-references between lines and blocks.
+- Added `:::test` for declarative verification.
+- Added completion evidence on `v` lines with `@YYYY-MM-DD`.
+- Standardized key line prefixes across `intent`, `rules`, `state`, and `flow`.
+- Formalized `ban` for explicit forbidden outcomes.
 
-### 🛠️ Ecosystem & Tooling
+### Ecosystem and Tooling
 
-- **`aimd-vscode` (v0.2.0)**: 
-  - Full syntax highlighting support for `ref()`, `@date`, and `:::test`.
-  - Added specific scope highlighting for key core blocks.
-- **`aimd-cli` (v0.2.0)**:
-  - Upgraded parser and generator to comply with v1.5 standards.
-  - Implemented **Referential Integrity Scanner** to check for dangling `ref()` IDs.
-  - Added strict date format validation.
-- **`aimd-validator`**:
-  - Enhanced Python and Markdown validator specifications with v1.5 checklists.
-  - Updated JSON output schema (v1.5) with `referential_integrity` metrics.
+- Updated `aimd-vscode` to highlight `ref()`, `@date`, and `:::test`.
+- Updated `aimd-cli` parser and generator for v1.5 behavior.
+- Improved validator guidance for referential integrity and date validation.
 
 ---
 
 ## [1.4.0] - 2026-03-29
 
-### ✨ Feature: Solid Memory Initial Standard
+### Initial Public Standard
 
-- Initial formalization of AIMD as a "Solid Memory" standard.
-- Definition of core blocks: `:::intent`, `:::rules`, `:::state`, `:::flow`.
-- Introduction of standardized line-id based canonical memory.
-- Added basic syntax and semantic validator guidelines.
-- Launched `aimd-vscode` extension prototype.
+- Introduced AIMD as a canonical memory format for AI collaboration.
+- Defined the four core blocks: `:::intent`, `:::rules`, `:::state`, `:::flow`.
+- Introduced stable line IDs and baseline validator guidance.
+- Published the initial public repository structure and tooling direction.
+
+---
+
+SPDX-License-Identifier: Apache-2.0

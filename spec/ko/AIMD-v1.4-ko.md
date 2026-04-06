@@ -350,3 +350,7 @@ MD→AIMD 변환은 **의미 보존적 구조 재구성(lossless semantic restru
 ## 25. 결론 (Conclusion)
 
 AIMD v1.4는 겉모습은 마크다운처럼 보이지만, 근본적으로는 **AI 에이전트들이 최소한의 토큰 비용과 최소한의 의미적 모호성으로 컨텍스트를 전달할 수 있도록 설계된 정형 메모리 포맷**입니다.
+
+---
+
+SPDX-License-Identifier: Apache-2.0

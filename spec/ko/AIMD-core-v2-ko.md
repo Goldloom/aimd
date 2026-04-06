@@ -137,3 +137,7 @@ Canonical 라인 형식:
 - `AIMD-v1.4-ko.md`, `AIMD-v1.5-ko.md`는 공개 레거시 스펙으로 유지됩니다
 - AIMD Core v2는 현재 공개 차세대 코어 초안입니다
 - 상위 AIMD 레이어는 별도 문서로 분리될 수 있습니다
+
+---
+
+SPDX-License-Identifier: Apache-2.0

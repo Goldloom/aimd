@@ -701,3 +701,7 @@ compression validated
 ```
 
 AIMD v1.4 looks like Markdown, but it is fundamentally a canonical memory format designed for AI agents to hand off context with the least token cost and the least semantic ambiguity.
+
+---
+
+SPDX-License-Identifier: Apache-2.0

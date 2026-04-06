@@ -33,3 +33,7 @@ AIMD v1.5 is more than just a syntax—it is the **'Architectural Infrastructure
 
 ---
 > "Where and how is an AI agent's memory (context) stored? AIMD v1.5 provides the definitive answer."
+
+---
+
+SPDX-License-Identifier: Apache-2.0

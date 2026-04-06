@@ -6,3 +6,7 @@ This repository publicly maintains:
 - the public AIMD Core v2 draft
 
 Higher AIMD layers may exist, but they are not part of the public Core unless explicitly promoted into this repository.
+
+---
+
+SPDX-License-Identifier: Apache-2.0

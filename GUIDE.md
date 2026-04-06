@@ -1,97 +1,98 @@
-# AIMD (AI-Enhanced Markdown) v1.5 Practical Guide
+# AIMD Practical Guide
 
-This guide covers the **AI-Native workflow for starting new projects** using the AIMD v1.5 specification from the initial planning stage.
+How to use AIMD in a real project from day zero.
 
----
-
-## 1. Overview: Why Start with AIMD?
-
-Traditional documentation (`.md`) prioritizes human readability. However, when collaborating with AI, **"Semantic Clarity"**, **"Verifiability"**, and **"Low Token Cost"** are the keys to productivity.
-
-By starting a project with AIMD v1.5:
-1. **Eliminate Ambiguity**: Core concepts are declared using normalized lines (`g1`, `r1`, etc.) instead of free prose.
-2. **Traceable Dependencies**: Use `ref()` to explicitly link rules, milestones, and implementation details.
-3. **Immediate Implementation**: The moment your plan is finished, AI agents have a "Perfect Memory" to start writing code without needing summaries.
-4. **Automated Verification**: Use `:::test` blocks to define declarative assertions that AI can verify instantly.
+[한국어 가이드](GUIDE-ko.md)
 
 ---
 
-## 2. Day Zero: New Project Workflow (Quick Start)
+## Goal
 
-Follow these 4 phases when starting a new project (e.g., 'AI Survey Tool').
+This guide explains a practical workflow:
 
-### Phase 1: Declare Intent (`:::intent`)
-Define the **Goal (g)** and **Success Criteria (ok)** first.
+1. define the project in prose once
+2. convert it into AIMD Core
+3. let AI agents work from canonical memory instead of repeated prompting
 
-```markdown
-:::intent
-g1: ai_native_smart_survey_builder
-ok1: survey_generation_time < 30sec
-ok2: multi_language_support_by_default
-in1: registration+survey_creation+analytics
-out1: advanced_crm_integration
-:::
-```
+---
 
-### Phase 2: Set Rules & Constraints (`:::rules`)
-Specify the tech stack, security principles, and the **Bans (ban)**—things the AI must never do. Use `ref()` to link related rules.
+## Recommended Starting Point
 
-```markdown
-:::rules
-r1: stack=Next.js_15+Drizzle+Tailwind4
-r2: auth=Better_Auth+SSO
-r3: encryption_at_rest ref(r2)
-ban1: no_client_side_form_logic_leak ref(r1)
-fz1: r2_key_pattern={userId}/{surveyId}/{nanoid}.{ext}
-:::
-```
+If you are adopting AIMD today:
 
-### Phase 3: Define Data Schema (`:::schema`)
-Defining table structures or data shapes at this stage allows you to immediately command the AI: "Write the DB migration code based on this schema."
+- read [AIMD Core v2 Draft](spec/en/AIMD-core-v2.md)
+- use v1.5 only as legacy reference
+- begin with Core only
+- add higher layers only if your workflow clearly needs them
 
-```markdown
-:::schema
-surveys(id TEXT PK, user_id, title TEXT, description TEXT, created_at)
-questions(id TEXT PK, survey_id->surveys.id, type TEXT[text|select|rating], content TEXT)
-:::
-```
+---
 
-### Phase 4: Define Execution Flow & Verification (`:::flow` & `:::test`)
-Define milestones and set up automated tests to verify them.
+## Day Zero Workflow
 
-```markdown
-:::flow
-s1: infrastructure_setup(nextjs+lucia+drizzle) @2026-03-31
-s2: auth_implementation(email+kakao) ref(r2)
-s3: survey_generator_engine_ai_connect ref(s2)
-:::
+### 1. Write Intent
 
-:::test
-t1: s1=verified -> env(DATABASE_URL)
-t2: s2=verified -> route(/api/auth/callback)
-:::
+Start with `:::intent`.
+Capture goals, success criteria, scope in, and scope out.
+
+### 2. Lock Constraints
+
+Use `:::rules` to define:
+
+- required constraints
+- banned outcomes
+- frozen decisions
+
+### 3. Capture Current Truth
+
+Use `:::state` to record:
+
+- verified facts
+- open issues
+- assumptions
+- next actions
+
+### 4. Define Execution Order
+
+Use `:::flow` to express steps and ordering.
+
+### 5. Normalize Before Handoff
+
+Before handing off to another AI:
+
+- expand draft-only IDs such as `g+`
+- ensure canonical block order
+- remove accidental prose from core blocks
+- validate refs
+
+---
+
+## Good AIMD Habits
+
+- Keep one fact in one place.
+- Prefer symbolic payloads over prose.
+- Use `ref()` instead of repeating context.
+- Treat AIMD as canonical memory, not as a narrative document.
+
+---
+
+## Minimal Team Workflow
+
+```text
+human defines project intent
+AI writes AIMD Core
+validator checks structure
+coding agent reads AIMD Core
+next agent resumes from updated AIMD
 ```
 
 ---
 
-## 3. Core Best Practices (v1.5)
+## Next Reading
 
-1. **Prose-Free Zone**
-   - Do not use descriptive sentences inside core blocks.
-   - Use short, powerful expressions like `key=value`, `subject->result`, or `ref(id)`.
-   
-2. **Verifiable References**
-   - Use `ref(id1, id2)` to express logic dependencies. It prevents AI from guessing relationships.
-
-3. **Temporal Evidence (@date)**
-   - Mark completed milestones (`v` lines) with `@YYYY-MM-DD` to maintain a verifiable timeline.
-
-4. **One Fact, One Location**
-   - Never repeat the same information. Reference line IDs instead.
+- [README](README.md)
+- [AIMD Core v2 Draft](spec/en/AIMD-core-v2.md)
+- [Legacy AIMD v1.5 Spec](spec/en/AIMD-v1.5.md)
 
 ---
 
-## 4. References
-
-* [AIMD v1.5 Full Specification](spec/en/AIMD-v1.5.md)
-* [New Project Bootstrap Template](examples/bootstrap.aimd)
+SPDX-License-Identifier: Apache-2.0

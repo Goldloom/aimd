@@ -398,3 +398,7 @@ Recommended implementation order:
 ## 17. Conclusion
 
 The AIMD v1.4 syntax validator is the minimal format guarantor that answers: **is this document safe to pass to the semantic and compression stages?**
+
+---
+
+SPDX-License-Identifier: Apache-2.0

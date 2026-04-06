@@ -1,45 +1,68 @@
-# Contributing to AIMD (v1.5)
+# Contributing to AIMD
 
-First off, thank you for considering contributing to AIMD! It's people like you who make AIMD a better standard for everyone.
+Thank you for contributing to AIMD.
 
-## How Can I Contribute?
+This repository now has a clear public scope:
 
-### Reporting Bugs
-If you find a bug in the specification, validators, or examples, please open an issue on GitHub. Include:
-* A clear and descriptive title.
-* Steps to reproduce the issue (including the AIMD version you're using).
-* Expected vs. actual behavior.
+- legacy public specs through v1.5
+- a public AIMD Core v2 draft
+- supporting examples, docs, and validator-facing materials
 
-### Suggesting Improvements
-We welcome suggestions for the AIMD specification (v1.5 and beyond). To suggest an improvement:
-1. Open an issue to discuss the change.
-2. Provide a clear rationale for why the change is needed.
-3. Show examples of how the change would look in an `.aimd` file using `ref()` and `:::test`.
-
-### Pull Requests
-1. Fork the repository.
-2. Create a new branch for your changes (`git checkout -b feature/amazing-feature`).
-3. If you are adding or modifying `.aimd` examples, **MUST** run the validator first:
-   ```bash
-   python validators/validator.py examples/your-file.aimd
-   ```
-4. Verify **Referential Integrity**: ensure all `ref()` IDs point to valid lines.
-5. Commit your changes with a clear message.
-6. Push to the branch.
-7. Open a Pull Request.
-
-## Practical Guidelines (v1.5)
-
-* **Verifiable Precision**: Use `ref(id)` to link dependencies. Do not let the next agent guess.
-* **Keep it Canonical**: Remember the goal of AIMD is AI-to-AI communication. Avoid adding unnecessary prose.
-* **Token Efficiency**: Every new rule or block should be evaluated for its token cost impact.
-* **Maintain Stability**: Always track completion evidence on `v` lines using `@YYYY-MM-DD`.
-* **Tests are First-Class**: New features or rules SHOULD include a corresponding `:::test` assertion.
-
-## License
-
-By contributing to AIMD, you agree that your contributions will be licensed under the **Apache License 2.0**.
+Higher commercial layers may exist separately. Contributions in this repository should stay within the public scope.
 
 ---
 
-Thank you for helping us build the future of **Verifiable AI-to-AI Memory**!
+## What to Contribute
+
+Good contribution targets include:
+
+- clarifications to the public Core spec
+- examples of AIMD Core documents
+- validator-facing test cases
+- documentation improvements
+- translation fixes
+
+Please avoid proposing repository changes that assume private or commercial-only AIMD layers are public here.
+
+---
+
+## Contribution Principles
+
+- Keep the public Core small.
+- Prefer semantic clarity over prose flourish.
+- Prefer explicit structure over implied meaning.
+- Do not expand public Core scope without strong interoperability justification.
+- Treat legacy v1.5 content as reference history, not as the default future direction.
+
+---
+
+## Practical Workflow
+
+1. Open an issue or discussion if the change affects public spec semantics.
+2. If you change examples or syntax guidance, keep them aligned with `spec/en/AIMD-core-v2.md`.
+3. If you add Korean content, keep it meaningfully aligned with the English source.
+4. Keep examples canonical and validator-friendly.
+5. Submit a pull request with a concise explanation of the change.
+
+---
+
+## For Spec Changes
+
+When proposing a Core-spec change, include:
+
+- the problem being solved
+- why it belongs in public Core rather than a higher layer
+- an example before and after
+- expected validator impact
+
+The default bias is conservative. Public Core should evolve slowly.
+
+---
+
+## License
+
+Unless stated otherwise, contributions to the public materials in this repository are accepted under the Apache License 2.0 used by this repository.
+
+---
+
+SPDX-License-Identifier: Apache-2.0
