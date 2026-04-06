@@ -9,9 +9,8 @@ AI-readable, AI-writable canonical memory for multi-agent work.
 
 > **License notice**
 > Public spec history through v1.5: [Apache License 2.0](LICENSE)
-> Public AIMD Core v2 draft in this repository: intended to remain open under Apache 2.0
-> AIMD Specification v2 and later: [Commercial License](LICENSE-COMMERCIAL.md) applies
-> Higher AIMD extensions, commercial implementations, and hosted products may be licensed separately
+> Public AIMD Core v2 (this repository): Apache License 2.0
+> AIMD extensions, commercial implementations, and hosted products: [Commercial License](LICENSE-COMMERCIAL.md) applies
 
 ---
 
