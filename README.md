@@ -7,9 +7,10 @@ AI-readable, AI-writable canonical memory for multi-agent work.
 [![Spec](https://img.shields.io/badge/spec-AIMD_Core_v2-blue)](spec/en/AIMD-core-v2.md)
 [![Legacy](https://img.shields.io/badge/legacy-v1.5-orange)](spec/en/AIMD-v1.5.md)
 
-> License notice
+> **License notice**
 > Public spec history through v1.5: [Apache License 2.0](LICENSE)
 > Public AIMD Core v2 draft in this repository: intended to remain open under Apache 2.0
+> AIMD Specification v1.6 and later: [Commercial License](LICENSE-COMMERCIAL.md) applies
 > Higher AIMD extensions, commercial implementations, and hosted products may be licensed separately
 
 ---
