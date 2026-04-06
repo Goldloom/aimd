@@ -2,7 +2,7 @@
 
 AI-readable, AI-writable canonical memory for multi-agent work.
 
-[?쒓뎅??README](README-ko.md)
+[한국어 README](README-ko.md)
 
 [![Spec](https://img.shields.io/badge/spec-AIMD_Core_v2-blue)](spec/en/AIMD-core-v2.md)
 [![Legacy](https://img.shields.io/badge/legacy-v1.5-orange)](spec/en/AIMD-v1.5.md)
