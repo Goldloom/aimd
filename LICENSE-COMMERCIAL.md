@@ -8,10 +8,10 @@
 
 ## 1. Scope of Application
 
-This license applies to AIMD Specification v1.6 and later.
+This license applies to AIMD Specification v2 and later.
 
 - v1.5 and earlier: Apache License 2.0 (see `LICENSE` file)
-- **v1.6 and later: This document (Commercial License) applies**
+- **v2 and later: This document (Commercial License) applies**
 
 ---
 
@@ -94,10 +94,10 @@ This license shall be governed by and construed in accordance with the laws of t
 
 ## 1. 적용 범위
 
-이 라이선스는 AIMD Specification v1.6 이상에 적용됩니다.
+이 라이선스는 AIMD Specification v2 이상에 적용됩니다.
 
 - v1.5 이하: Apache License 2.0 (`LICENSE` 파일 참조)
-- **v1.6 이상: 이 문서(상업용 라이선스)가 적용됩니다**
+- **v2 이상: 이 문서(상업용 라이선스)가 적용됩니다**
 
 ---
 
